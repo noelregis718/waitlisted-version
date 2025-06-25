@@ -1,6 +1,6 @@
-# AnkFin - Smart Money Automation Platform
+# AnkFin - A Personal CFO In Your pockets
 
-AnkFin is a smart money automation platform designed to help users automate the allocation of their income into bills, savings, taxes, and investments, based on personalized financial goals.
+Think of it as an AI-powered CFO in your pocket, that manages your cash flow, bills, and goals automatically. Ankfin actually thinks ahead for you by preserving your present financial situation, protects your goals, and helps you realize your future. We're not building a dashboard or another budget app. It's the financial brain that thinks, plans, and protects your money automatically. Takes in consideration of financial reality, makes decisions, and protects users in real time.
 
 ## Features
 
