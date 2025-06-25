@@ -25,6 +25,7 @@ model User {
   accounts      Account[]
   incomeSources IncomeSource[]
   incomeSplit   IncomeSplit?
+  goals         Goal[]
 }
 
 model Profile {
@@ -94,6 +95,19 @@ model IncomeSplit {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   user                  User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Goal {
+  id        String   @id @default(cuid())
+  name      String
+  target    Float
+  deadline  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 } 

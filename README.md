@@ -51,3 +51,22 @@ PLAID_SECRET="your-plaid-secret"
 STRIPE_SECRET_KEY="your-stripe-secret-key"
 STRIPE_PUBLISHABLE_KEY="your-stripe-publishable-key"
 ```
+
+## Updating Database Schema and Redeploying
+
+If you make changes to the Prisma schema (e.g., adding a new model):
+
+1. Apply the migration and update your database:
+   ```bash
+   npx prisma migrate dev --name <migration_name>
+   ```
+   Replace `<migration_name>` with a descriptive name (e.g., `add_goal_model`).
+
+2. Commit and push the updated migration and schema files:
+   ```bash
+   git add .
+   git commit -m "Add Goal model to Prisma schema"
+   git push origin main
+   ```
+
+3. Redeploy your app on Netlify (trigger a new deploy from the Netlify dashboard or by pushing to the main branch).
