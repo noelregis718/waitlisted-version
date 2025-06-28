@@ -37,23 +37,6 @@ class NotificationService {
       return JSON.parse(stored)
     }
     return {
-      email: {
-        enabled: true,
-        types: {
-          income: true,
-          goal: true,
-          overspend: true,
-          bill: true,
-          investment: true,
-          budget: true,
-          milestone: true
-        },
-        priority: {
-          low: true,
-          medium: true,
-          high: true
-        }
-      },
       browser: {
         enabled: true,
         types: {
@@ -133,12 +116,6 @@ class NotificationService {
     }
 
     try {
-      // Check if notification should be sent based on settings
-      if (this.shouldSendNotification(data, 'email')) {
-        await this.sendEmailNotification(data)
-        notification.channels.push('email')
-      }
-
       if (this.shouldSendNotification(data, 'browser')) {
         this.sendBrowserNotification(data)
         notification.channels.push('browser')
@@ -155,7 +132,7 @@ class NotificationService {
     }
   }
 
-  private shouldSendNotification(data: NotificationData, channel: 'email' | 'browser'): boolean {
+  private shouldSendNotification(data: NotificationData, channel: 'browser'): boolean {
     const channelSettings = this.settings[channel]
     return (
       channelSettings.enabled &&
@@ -181,106 +158,16 @@ class NotificationService {
     localStorage.removeItem('notificationHistory')
   }
 
-  private async sendEmailNotification(data: NotificationData) {
-    const email = localStorage.getItem('userEmail')
-    if (!email) return
-
-    const msg = {
-      to: email,
-      subject: data.title,
-      text: data.message,
-      html: this.generateEmailTemplate(data)
-    }
-
-    try {
-      const response = await fetch('/api/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(msg)
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to send email')
-      }
-    } catch (error) {
-      console.error('Error sending email:', error)
-    }
-  }
-
   private sendBrowserNotification(data: NotificationData) {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(data.title, {
         body: data.message,
-        icon: '/logo.png',
-        badge: '/logo.png',
+        icon: '/favicon.svg',
+        badge: '/favicon.svg',
         tag: data.type,
         requireInteraction: data.priority === 'high'
       })
     }
-  }
-
-  private generateEmailTemplate(data: NotificationData): string {
-    const priorityColors = {
-      low: '#4CAF50',
-      medium: '#2196F3',
-      high: '#F44336'
-    }
-
-    const typeIcons = {
-      income: '💰',
-      goal: '🎯',
-      overspend: '⚠️',
-      bill: '📝',
-      investment: '📈',
-      budget: '📊',
-      milestone: '🏆'
-    }
-
-    let template = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="/logo.png" alt="FlowBank Logo" style="max-width: 150px; margin-bottom: 10px;">
-          <h2 style="color: #333; margin: 0;">${typeIcons[data.type]} ${data.title}</h2>
-          <div style="background-color: ${priorityColors[data.priority || 'medium']}; height: 4px; width: 100px; margin: 10px auto;"></div>
-        </div>
-        
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <p style="color: #666; margin: 0; font-size: 16px; line-height: 1.5;">${data.message}</p>
-        </div>
-    `
-
-    if (data.amount) {
-      template += `
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0;">
-          <p style="margin: 0; color: #333;"><strong>Amount:</strong> $${data.amount.toFixed(2)}</p>
-        </div>
-      `
-    }
-
-    if (data.goalName && data.progress !== undefined) {
-      const progressColor = data.progress >= 100 ? '#4CAF50' : data.progress >= 90 ? '#FFC107' : '#2196F3'
-      template += `
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0;">
-          <p style="margin: 0; color: #333;"><strong>Goal:</strong> ${data.goalName}</p>
-          <div style="background-color: #e0e0e0; height: 8px; border-radius: 4px; margin: 10px 0;">
-            <div style="background-color: ${progressColor}; height: 8px; border-radius: 4px; width: ${data.progress}%;"></div>
-          </div>
-          <p style="margin: 0; color: #333;"><strong>Progress:</strong> ${data.progress}%</p>
-        </div>
-      `
-    }
-
-    template += `
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
-          <p style="color: #999; font-size: 12px; margin: 0;">This is an automated message from FlowBank. Please do not reply to this email.</p>
-          <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Priority: ${data.priority?.toUpperCase() || 'MEDIUM'}</p>
-        </div>
-      </div>
-    `
-
-    return template
   }
 
   public updateSettings(newSettings: Partial<NotificationSettings>) {

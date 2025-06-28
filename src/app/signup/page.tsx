@@ -13,6 +13,7 @@ export default function SignUpPage() {
     password: '',
     confirmPassword: '',
     businessName: '',
+    phoneNumber: '',
     businessType: 'freelancer', // default value
     monthlyIncome: '',
   })
@@ -39,10 +40,10 @@ export default function SignUpPage() {
     }
 
     try {
-      await signUp(formData.email, formData.password)
+      await signUp(formData.email, formData.password, formData.businessName, formData.monthlyIncome, formData.phoneNumber)
       router.push('/dashboard')
-    } catch (error) {
-      setError('Failed to create account. Please try again.')
+    } catch (error: any) {
+      setError(error.message || 'Failed to create account. Please try again.')
       console.error('Error signing up:', error)
     } finally {
       setLoading(false)
@@ -92,6 +93,22 @@ export default function SignUpPage() {
                 required
                 className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Your Business Name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="+1 (555) 123-4567"
               />
             </div>
 

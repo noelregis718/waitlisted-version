@@ -1,11 +1,10 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 
 interface User {
   id: string
-  email: string
+  email?: string
   firstName?: string
   lastName?: string
   companyName?: string
@@ -16,7 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signUp: (email: string, password: string, firstName?: string, lastName?: string, companyName?: string) => Promise<string | void>
+  signUp: (email: string, password: string, businessName?: string, phoneNumber?: string, monthlyIncome?: string) => Promise<string | void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => void
 }
@@ -45,39 +44,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
-  const signUp = async (email: string, password: string, firstName?: string, lastName?: string, companyName?: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password
-    })
-    if (error) {
-      throw new Error(error.message)
+  const signUp = async (email: string, password: string, businessName?: string, phoneNumber?: string, monthlyIncome?: string) => {
+    try {
+      // Use only the custom registration API
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName: '',
+          lastName: '',
+          companyName: businessName,
+          profile: {
+            phoneNumber,
+            monthlyIncome,
+          }
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create account')
+      }
+      
+      // Set the user in local state
+      const userData = {
+        id: result.user.id,
+        email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        companyName: result.user.companyName,
+        role: result.user.role
+      }
+      
+      setUser(userData)
+      localStorage.setItem('user', JSON.stringify(userData))
+      
+      return 'Account created successfully! Welcome to AnkFin!'
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to create account')
     }
-    // If user is null, email confirmation is likely required
-    if (!data.user) {
-      return 'Check your email to confirm your account before logging in.'
-    }
-    setUser(data.user)
-    localStorage.setItem('user', JSON.stringify(data.user))
   }
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-    if (error) {
-      throw new Error(error.message)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sign in')
+      }
+
+      // Set the user in local state
+      const userData = {
+        id: result.user.id,
+        email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        companyName: result.user.companyName,
+        role: result.user.role
+      }
+      
+      setUser(userData)
+      localStorage.setItem('user', JSON.stringify(userData))
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to sign in')
     }
-    if (!data.user) {
-      throw new Error('No user found. Please check your credentials or confirm your email.')
-    }
-    setUser(data.user)
-    localStorage.setItem('user', JSON.stringify(data.user))
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
     localStorage.removeItem('user')
     setUser(null)
   }

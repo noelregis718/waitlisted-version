@@ -11,6 +11,7 @@ Think of it as an AI-powered CFO in your pocket, that manages your cash flow, bi
 - Financial goal tracking
 - Bank account integration
 - Real-time financial insights
+- SMS notifications via Telynx
 
 ## Tech Stack
 
@@ -21,6 +22,7 @@ Think of it as an AI-powered CFO in your pocket, that manages your cash flow, bi
 - Authentication: NextAuth.js
 - Payment Processing: Stripe
 - Bank Integration: Plaid
+- SMS: Telynx
 
 ## Getting Started
 
@@ -50,7 +52,20 @@ PLAID_CLIENT_ID="your-plaid-client-id"
 PLAID_SECRET="your-plaid-secret"
 STRIPE_SECRET_KEY="your-stripe-secret-key"
 STRIPE_PUBLISHABLE_KEY="your-stripe-publishable-key"
+
+# Telynx SMS API Configuration
+TELYNX_API_KEY="your_telynx_api_key_here"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 ```
+
+### SMS Configuration
+
+To enable SMS notifications:
+
+1. Sign up for a Telynx account at https://portal.telynx.com/
+2. Get your API key from the Telynx portal
+3. Add your API key to the `TELYNX_API_KEY` environment variable
+4. The app will use your registered US number (+1-856-492-8674) to send welcome SMS messages
 
 ## Updating Database Schema and Redeploying
 

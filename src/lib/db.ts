@@ -33,6 +33,7 @@ export async function verifyPassword(plainPassword: string, hashedPassword: stri
 
 export async function createProfile(userId: string, profileData: {
   phoneNumber?: string
+  monthlyIncome?: number
   address?: string
   city?: string
   state?: string

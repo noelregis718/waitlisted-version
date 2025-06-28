@@ -35,30 +35,6 @@ interface Bill {
   status: 'paid' | 'pending' | 'overdue'
 }
 
-// Location hook
-function useUserLocation() {
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      (err) => setError('Unable to retrieve your location')
-    );
-  }, []);
-
-  return { location, error };
-}
-
 export default function LiveDashboardPage() {
   const router = useRouter()
   const notificationService = NotificationService.getInstance()
@@ -88,7 +64,6 @@ export default function LiveDashboardPage() {
   const [lastCheckTime, setLastCheckTime] = useState<number>(Date.now())
   const checkInterval = useRef<NodeJS.Timeout>()
   const { user } = useAuth()
-  const { location, error: locationError } = useUserLocation();
 
   const checkAndSendNotifications = useCallback(() => {
     const now = Date.now()
@@ -269,79 +244,75 @@ export default function LiveDashboardPage() {
 
           {/* Notification Settings Panel */}
           {showNotificationSettings && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-              <div className="bg-gray-800/95 border border-gray-700/50 rounded-lg p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Notification Settings</h2>
-                  <button
-                    onClick={() => setShowNotificationSettings(false)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Email Settings */}
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Email Notifications</h3>
-                    <div className="space-y-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={notificationSettings.email.enabled}
-                          onChange={(e) => handleNotificationSettingsChange('email', 'enabled', e.target.checked)}
-                          className="form-checkbox h-4 w-4 text-blue-500"
-                        />
-                        <span>Enable Email Notifications</span>
-                      </label>
-                      <div className="ml-6 space-y-2">
-                        <h4 className="text-sm font-medium text-gray-400">Notification Types</h4>
-                        {Object.entries(notificationSettings.email.types).map(([type, enabled]) => (
-                          <label key={type} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={enabled}
-                              onChange={(e) => handleNotificationSettingsChange('email', `types.${type}`, e.target.checked)}
-                              className="form-checkbox h-4 w-4 text-blue-500"
-                              disabled={!notificationSettings.email.enabled}
-                            />
-                            <span className="capitalize">{type}</span>
-                          </label>
-                        ))}
-                      </div>
+            <div className="bg-gray-800/80 border border-gray-700/40 rounded-xl p-6 mb-8 shadow">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Notification Settings</h2>
+                <button
+                  onClick={() => setShowNotificationSettings(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Email Settings */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Email Notifications</h3>
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={notificationSettings.email.enabled}
+                        onChange={(e) => handleNotificationSettingsChange('email', 'enabled', e.target.checked)}
+                        className="form-checkbox h-4 w-4 text-blue-500"
+                      />
+                      <span>Enable Email Notifications</span>
+                    </label>
+                    <div className="ml-6 space-y-2">
+                      <h4 className="text-sm font-medium text-gray-400">Notification Types</h4>
+                      {Object.entries(notificationSettings.email.types).map(([type, enabled]) => (
+                        <label key={type} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={enabled}
+                            onChange={(e) => handleNotificationSettingsChange('email', `types.${type}`, e.target.checked)}
+                            className="form-checkbox h-4 w-4 text-blue-500"
+                            disabled={!notificationSettings.email.enabled}
+                          />
+                          <span className="capitalize">{type}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
+                </div>
 
-                  {/* Browser Settings */}
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Browser Notifications</h3>
-                    <div className="space-y-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={notificationSettings.browser.enabled}
-                          onChange={(e) => handleNotificationSettingsChange('browser', 'enabled', e.target.checked)}
-                          className="form-checkbox h-4 w-4 text-blue-500"
-                        />
-                        <span>Enable Browser Notifications</span>
-                      </label>
-                      <div className="ml-6 space-y-2">
-                        <h4 className="text-sm font-medium text-gray-400">Notification Types</h4>
-                        {Object.entries(notificationSettings.browser.types).map(([type, enabled]) => (
-                          <label key={type} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={enabled}
-                              onChange={(e) => handleNotificationSettingsChange('browser', `types.${type}`, e.target.checked)}
-                              className="form-checkbox h-4 w-4 text-blue-500"
-                              disabled={!notificationSettings.browser.enabled}
-                            />
-                            <span className="capitalize">{type}</span>
-                          </label>
-                        ))}
-                      </div>
+                {/* Browser Settings */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Browser Notifications</h3>
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={notificationSettings.browser.enabled}
+                        onChange={(e) => handleNotificationSettingsChange('browser', 'enabled', e.target.checked)}
+                        className="form-checkbox h-4 w-4 text-blue-500"
+                      />
+                      <span>Enable Browser Notifications</span>
+                    </label>
+                    <div className="ml-6 space-y-2">
+                      <h4 className="text-sm font-medium text-gray-400">Notification Types</h4>
+                      {Object.entries(notificationSettings.browser.types).map(([type, enabled]) => (
+                        <label key={type} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={enabled}
+                            onChange={(e) => handleNotificationSettingsChange('browser', `types.${type}`, e.target.checked)}
+                            className="form-checkbox h-4 w-4 text-blue-500"
+                            disabled={!notificationSettings.browser.enabled}
+                          />
+                          <span className="capitalize">{type}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -463,21 +434,10 @@ export default function LiveDashboardPage() {
             </div>
           </div>
         </div>
-        {/* Sidebar: Location box above AI Chatbox */}
-        <div className="flex flex-col items-stretch w-[400px] min-w-[320px] max-w-sm h-[700px] ml-4">
-          {/* Small Location Box */}
-          <div className="bg-gray-800/90 border border-gray-700/40 rounded-xl px-4 py-2 mb-2 shadow text-white text-sm flex items-center justify-between min-h-[40px] max-h-[48px]">
-            <span className="font-semibold">📍 Location</span>
-            {locationError ? (
-              <span className="text-red-400">{locationError}</span>
-            ) : location ? (
-              <span>Lat: {location.lat.toFixed(2)}, Lng: {location.lng.toFixed(2)}</span>
-            ) : (
-              <span className="text-gray-400">...</span>
-            )}
-          </div>
-          {/* AI Chatbox */}
-          <div className="flex-1 bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900 border border-blue-700 rounded-3xl shadow-2xl flex flex-col p-2">
+        
+        {/* AI Chatbox */}
+        <div className="w-[400px] min-w-[320px] max-w-sm h-[700px] ml-4">
+          <div className="w-full h-full bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900 border border-blue-700 rounded-3xl shadow-2xl flex flex-col p-2 min-h-0">
             <AIChatBox />
           </div>
         </div>

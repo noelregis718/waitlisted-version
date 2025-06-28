@@ -33,6 +33,7 @@ model Profile {
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   phoneNumber   String?
+  monthlyIncome Float?
   address       String?
   city          String?
   state         String?
