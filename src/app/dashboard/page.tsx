@@ -373,6 +373,8 @@ export default function DashboardPage() {
   };
 
   const handleSpendingSubmit = () => {
+    // Save monthly expenses to localStorage for use in live dashboard
+    localStorage.setItem('monthlyExpenses', JSON.stringify(budgetingPreferences.monthlyExpenses));
     setShowSpendingForm(false);
     setShowInvestmentForm(true);
   };
