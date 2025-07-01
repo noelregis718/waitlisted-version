@@ -48,6 +48,26 @@ const StatisticsIcon = () => (
   <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 17a4 4 0 01-4-4V5a4 4 0 018 0v8a4 4 0 01-4 4zm0 0v2m0 0h2m-2 0H9" /></svg>
 );
 
+// Add icons for new side-panel options
+const AccountsIcon = () => (
+  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+);
+const BillPayIcon = () => (
+  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 14l2-2 4 4m0 0l-4-4-2 2" /></svg>
+);
+const SettingsIcon = () => (
+  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /></svg>
+);
+const PlanIcon = () => (
+  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+);
+const GoalsIcon = () => (
+  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" /><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" fill="none" /></svg>
+);
+const ReceiptIcon = () => (
+  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 8h8M8 12h8M8 16h4" /></svg>
+);
+
 export default function LiveDashboardPage() {
   const router = useRouter()
   const notificationService = NotificationService.getInstance()
@@ -86,7 +106,7 @@ export default function LiveDashboardPage() {
   const [showPlaidSandbox, setShowPlaidSandbox] = useState(false)
   const [newGoalName, setNewGoalName] = useState('');
   const [newGoalTarget, setNewGoalTarget] = useState('');
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'transactions' | 'statistics'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'transactions' | 'statistics' | 'accounts' | 'billpay' | 'settings' | 'plan' | 'goals' | 'receipt'>('dashboard');
   const [showAIChat, setShowAIChat] = useState(false);
   const [transactionFilter, setTransactionFilter] = useState<'highest' | 'recent' | 'lowest' | 'oldest' | 'all'>('all');
   const [statsStartDate, setStatsStartDate] = useState(() => {
@@ -103,6 +123,12 @@ export default function LiveDashboardPage() {
     return d.toISOString().slice(0, 10);
   });
   const [statsFilterApplied, setStatsFilterApplied] = useState(false);
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  // Store user expenses in a ref for use in generateTransactions
+  const userExpensesRef = useRef<any[]>([]);
+  // Add state for receipt capture
+  const [selectedReceipts, setSelectedReceipts] = useState([]);
+  const [uploadedReceipts, setUploadedReceipts] = useState([]);
 
   // Get current month and year
   const now = new Date();
@@ -145,14 +171,68 @@ export default function LiveDashboardPage() {
     }));
   }, [monthlyIncome, spentThisMonth, incomeSplit]);
 
-  // Use actual recent transactions (simulate from bills)
-  const recentTransactions = bills.slice(0, 4).map((bill, i) => ({
-    name: bill.name,
-    date: bill.dueDate,
-    amount: -bill.amount,
-    icon: bill.name.charAt(0).toUpperCase(),
-    color: ['blue', 'purple', 'pink', 'green'][i % 4]
-  }));
+  // Helper to get previous month range
+  function getPreviousMonthRange(now = new Date()) {
+    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const month = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const start = new Date(year, month, 1);
+    const end = new Date(year, month + 1, 1);
+    return { start, end };
+  }
+
+  // Simulate user transactions from bills/expenses for the last 6 months
+  const generateTransactions = () => {
+    const now = new Date();
+    let txs = [];
+    // Only include the last 6 months, including the current month
+    for (let m = 0; m < 6; m++) {
+      // Calculate the correct month and year
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      // Prevent any future months
+      if (monthDate > now) continue;
+      let monthBills = bills.length ? bills : [
+        { name: 'Utilities', amount: 100, dueDate: monthDate, category: 'Utilities', status: 'pending' },
+        { name: 'Groceries', amount: 200, dueDate: monthDate, category: 'Food', status: 'pending' },
+        { name: 'Transport', amount: 50, dueDate: monthDate, category: 'Transportation', status: 'pending' }
+      ];
+      // For the previous month, use userExpensesRef if available
+      if (m === 1 && userExpensesRef.current.length > 0) {
+        const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        monthBills = userExpensesRef.current.map((exp, idx) => ({
+          name: exp.name,
+          amount: exp.amount,
+          dueDate: new Date(prevMonthYear, prevMonth, 5 + idx),
+          category: exp.name,
+          status: 'pending',
+        }));
+      }
+      monthBills.forEach((bill, i) => {
+        // Transaction date should not be in the future
+        const txDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), 5 + i * 7);
+        if (txDate > now) return;
+        txs.push({
+          name: bill.name,
+          date: txDate,
+          amount: -bill.amount,
+          category: bill.category,
+        });
+      });
+    }
+    // Sort transactions by date descending (most recent first)
+    txs.sort((a, b) => b.date - a.date);
+    return txs;
+  };
+  const allTransactions = generateTransactions();
+
+  // Now define recentTransactions and allRecentTransactions
+  const { start: prevMonthStart, end: prevMonthEnd } = getPreviousMonthRange();
+  const recentTransactions = useMemo(() => {
+    return allTransactions.filter(tx => tx.date >= prevMonthStart && tx.date < prevMonthEnd).slice(0, 4);
+  }, [allTransactions, prevMonthStart, prevMonthEnd]);
+  const allRecentTransactions = useMemo(() => {
+    return allTransactions.filter(tx => tx.date >= prevMonthStart && tx.date < prevMonthEnd);
+  }, [allTransactions, prevMonthStart, prevMonthEnd]);
 
   // Use actual allocations for top spending
   const topSpending = useMemo(() => {
@@ -231,16 +311,22 @@ export default function LiveDashboardPage() {
     if (storedExpenses) {
       try {
         const expenses = JSON.parse(storedExpenses)
+        userExpensesRef.current = expenses.filter((exp: any) => exp.amount > 0);
         // Only include categories with amount > 0
-        userBills = expenses.filter((exp: any) => exp.amount > 0).map((exp: any) => ({
+        // Set dueDate to a date in the previous month for dashboard display
+        const now = new Date();
+        const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        userBills = expenses.filter((exp) => exp.amount > 0).map((exp, idx) => ({
           name: exp.name,
           amount: exp.amount,
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Placeholder: all due in 7 days
+          dueDate: new Date(prevMonthYear, prevMonth, 5 + idx), // e.g., 5th, 6th, ... of last month
           category: exp.name,
           status: 'pending',
         }))
       } catch (e) {
         // fallback to default bills if parsing fails
+        userExpensesRef.current = [];
       }
     }
 
@@ -251,10 +337,13 @@ export default function LiveDashboardPage() {
       const categories = ['Utilities', 'Transportation', 'Entertainment', 'Other']
       const perCategory = Math.floor((needsAmount / categories.length) * 100) / 100
       let remainder = Math.round((needsAmount - perCategory * categories.length) * 100) / 100
+      const now = new Date();
+      const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+      const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
       userBills = categories.map((cat, idx) => ({
         name: cat,
         amount: perCategory + (idx === 0 ? remainder : 0), // add any rounding remainder to the first
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        dueDate: new Date(prevMonthYear, prevMonth, 5 + idx),
         category: cat,
         status: 'pending',
       }))
@@ -393,29 +482,6 @@ export default function LiveDashboardPage() {
     notificationService.updateSettings(newSettings)
   }
 
-  // Simulate user transactions from bills/expenses for the last 6 months
-  const generateTransactions = () => {
-    const now = new Date();
-    let txs = [];
-    for (let m = 0; m < 6; m++) {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() - m, 1);
-      (bills.length ? bills : [
-        { name: 'Utilities', amount: 100, dueDate: monthDate, category: 'Utilities', status: 'pending' },
-        { name: 'Groceries', amount: 200, dueDate: monthDate, category: 'Food', status: 'pending' },
-        { name: 'Transport', amount: 50, dueDate: monthDate, category: 'Transportation', status: 'pending' }
-      ]).forEach((bill, i) => {
-        txs.push({
-          name: bill.name,
-          date: new Date(monthDate.getFullYear(), monthDate.getMonth(), 5 + i * 7),
-          amount: -bill.amount,
-          category: bill.category,
-        });
-      });
-    }
-    return txs;
-  };
-  const allTransactions = generateTransactions();
-
   // Filter logic
   let filteredTransactions = [...allTransactions];
   if (transactionFilter === 'highest') {
@@ -449,9 +515,12 @@ export default function LiveDashboardPage() {
   const statsCashFlowData = filteredMonths.map(monthDate => {
     const month = monthDate.getMonth();
     const year = monthDate.getFullYear();
+    // For income, use monthlyIncome if set, otherwise sum positive transactions
+    const isCurrentOrPast = monthDate <= now;
+    const income = isCurrentOrPast ? monthlyIncome : 0;
+    // For expenses, sum all negative transactions for this month
     const monthTxs = allTransactions.filter(tx => tx.date.getMonth() === month && tx.date.getFullYear() === year && tx.date >= statsStart && tx.date <= statsEnd);
-    const income = monthTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
-    const expenses = monthTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + tx.amount, 0);
+    const expenses = monthTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
     // Estimate savings and investments from incomeSplit if not in transactions
     let savings = 0;
     let investments = 0;
@@ -459,14 +528,13 @@ export default function LiveDashboardPage() {
       savings = (monthlyIncome * (incomeSplit.savings || 0) / 100);
       investments = (monthlyIncome * (incomeSplit.investments || 0) / 100);
     }
-    // If there are explicit savings/investment transactions, use them (future extension)
     return {
       label: monthDate.toLocaleString('default', { month: 'short', year: '2-digit' }),
       income,
-      expenses: Math.abs(expenses),
+      expenses,
       savings,
       investments,
-      net: income + expenses,
+      net: income - expenses - savings - investments,
     };
   });
   const statsTotalIncome = statsCashFlowData.reduce((sum, d) => sum + d.income, 0);
@@ -474,6 +542,16 @@ export default function LiveDashboardPage() {
   const statsTotalSavings = statsCashFlowData.reduce((sum, d) => sum + d.savings, 0);
   const statsTotalInvestments = statsCashFlowData.reduce((sum, d) => sum + d.investments, 0);
   const statsNetCashFlow = statsTotalIncome - statsTotalExpenses - statsTotalSavings - statsTotalInvestments;
+
+  function handleReceiptFileChange(e) {
+    const files = Array.from(e.target.files || []);
+    setSelectedReceipts(prev => [...prev, ...files]);
+  }
+
+  function handleUploadReceipt(idx) {
+    setUploadedReceipts(prev => [...prev, selectedReceipts[idx]]);
+    setSelectedReceipts(prev => prev.filter((_, i) => i !== idx));
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white pt-24 flex flex-row">
@@ -483,24 +561,15 @@ export default function LiveDashboardPage() {
           <span className="text-2xl font-bold text-blue-400">FinDash</span>
         </div>
         <nav className="flex flex-col gap-2">
-          <button
-            className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'dashboard' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`}
-            onClick={() => setActiveSection('dashboard')}
-          >
-            <DashboardIcon /> Dashboard
-          </button>
-          <button
-            className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'transactions' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`}
-            onClick={() => setActiveSection('transactions')}
-          >
-            <TransactionsIcon /> Transactions
-          </button>
-          <button
-            className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'statistics' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`}
-            onClick={() => setActiveSection('statistics')}
-          >
-            <StatisticsIcon /> Statistics
-          </button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'dashboard' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('dashboard')}><DashboardIcon /> Dashboard</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'transactions' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('transactions')}><TransactionsIcon /> Transactions</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'statistics' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('statistics')}><StatisticsIcon /> Statistics</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'accounts' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('accounts')}><AccountsIcon /> Accounts</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'billpay' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('billpay')}><BillPayIcon /> Bill Pay</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'settings' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('settings')}><SettingsIcon /> Settings</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'plan' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('plan')}><PlanIcon /> Plan</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'goals' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('goals')}><GoalsIcon /> Goals</button>
+          <button className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${activeSection === 'receipt' ? 'bg-blue-700 text-white' : 'hover:bg-gray-800 text-gray-300'}`} onClick={() => setActiveSection('receipt')}><ReceiptIcon /> Receipt Capture</button>
         </nav>
       </aside>
       {/* Main Content */}
@@ -675,16 +744,19 @@ export default function LiveDashboardPage() {
                   <div className="bg-white rounded-xl p-6 shadow flex flex-col min-h-[200px]">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-bold text-lg text-gray-900">Recent transactions</span>
-                      <button className="text-xs text-blue-600 font-semibold">View all</button>
                     </div>
                     <ul className="space-y-2">
-                      {recentTransactions.map((tx, i) => (
-                        <li key={i} className="flex justify-between items-center text-gray-800">
-                          <span className="flex items-center gap-2"><span className={`bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center`}><span className={`text-gray-700 font-bold`}>{tx.icon}</span></span>{tx.name}</span>
-                          <span className="text-xs">{tx.date.toLocaleDateString()}</span>
-                          <span className="font-semibold">{formatCurrency(tx.amount)}</span>
-                        </li>
-                      ))}
+                      {recentTransactions.length === 0 ? (
+                        <li className="text-gray-400">No recent transactions.</li>
+                      ) : (
+                        recentTransactions.map((tx, i) => (
+                          <li key={i} className="flex justify-between items-center text-gray-800">
+                            <span className="flex items-center gap-2"><span className={`bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center`}><span className={`text-gray-700 font-bold`}>{tx.name.charAt(0).toUpperCase()}</span></span>{tx.name}</span>
+                            <span className="text-xs">{tx.date.toLocaleDateString()}</span>
+                            <span className="font-semibold">{formatCurrency(tx.amount)}</span>
+                          </li>
+                        ))
+                      )}
                     </ul>
                   </div>
                   {/* Credit Card Summary */}
@@ -832,6 +904,256 @@ export default function LiveDashboardPage() {
                 <div className="flex items-center gap-2"><span className="w-4 h-2 bg-yellow-300 rounded inline-block"></span> <span className="text-xs text-gray-200">Savings</span></div>
                 <div className="flex items-center gap-2"><span className="w-4 h-2 bg-purple-300 rounded inline-block"></span> <span className="text-xs text-gray-200">Investments</span></div>
               </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'accounts' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Accounts</h2>
+            {/* Example: List of user accounts (simulate with user object or placeholder) */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+              <div className="text-lg font-semibold mb-2">Primary Account</div>
+              <div className="text-gray-300">Name: {user?.email ? user.email.split('@')[0] : 'N/A'}</div>
+              <div className="text-gray-300">Email: {user?.email || 'N/A'}</div>
+              <div className="text-gray-300">Balance: {formatCurrency(totalBalance)}</div>
+            </div>
+            {/* Add more accounts or link new accounts here */}
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">Link New Account</button>
+          </div>
+        )}
+        {activeSection === 'billpay' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Bill Pay</h2>
+            {/* List of bills and pay option */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+              <h3 className="text-lg font-semibold mb-4">Upcoming Bills</h3>
+              <ul className="divide-y divide-gray-700">
+                {(() => {
+                  // Get user expenses from localStorage
+                  let billsToShow = [];
+                  if (typeof window !== 'undefined') {
+                    const storedExpenses = localStorage.getItem('monthlyExpenses');
+                    if (storedExpenses) {
+                      try {
+                        const expenses = JSON.parse(storedExpenses).filter((exp: any) => exp.amount > 0);
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const currentMonth = now.getMonth();
+                        let day = now.getDate() + 7; // Start 1 week from today
+                        billsToShow = expenses.map((exp: any, idx: number) => {
+                          // Ensure the due date is after today, but within this month
+                          let dueDay = day + idx * 3;
+                          const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+                          if (dueDay > lastDay) dueDay = lastDay;
+                          return {
+                            name: exp.name,
+                            amount: exp.amount,
+                            dueDate: new Date(currentYear, currentMonth, dueDay),
+                          };
+                        });
+                      } catch (e) {}
+                    }
+                  }
+                  return billsToShow.length === 0 ? (
+                    <li className="text-gray-400">No upcoming bills.</li>
+                  ) : (
+                    billsToShow.map((bill, i) => (
+                      <li key={i} className="flex justify-between items-center py-3">
+                        <div>
+                          <div className="font-semibold text-white">{bill.name}</div>
+                          <div className="text-xs text-gray-400">Due: {bill.dueDate.toLocaleDateString()}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg text-blue-300">{formatCurrency(bill.amount)}</div>
+                          <button className="mt-1 px-3 py-1 bg-green-600 text-white rounded">Pay</button>
+                        </div>
+                      </li>
+                    ))
+                  );
+                })()}
+              </ul>
+            </div>
+          </div>
+        )}
+        {activeSection === 'settings' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Settings</h2>
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+              {/* Profile Settings */}
+              <h3 className="text-lg font-semibold mb-4">Profile Settings</h3>
+              <div className="mb-4">
+                <div className="flex items-center gap-4 mb-2">
+                  <span className="text-gray-400 w-32">Name:</span>
+                  <span className="text-white">{user?.email ? user.email.split('@')[0] : 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-400 w-32">Email:</span>
+                  <span className="text-white">{user?.email || 'N/A'}</span>
+                </div>
+              </div>
+              {/* Notification Preferences */}
+              <h3 className="text-lg font-semibold mb-4 mt-8">Notification Preferences</h3>
+              <div className="flex flex-col gap-2 mb-4">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={notificationSettings.email.enabled} onChange={e => handleNotificationSettingsChange('email', 'enabled', e.target.checked)} className="form-checkbox h-4 w-4 text-blue-500" />
+                  <span className="text-white">Enable Email Notifications</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={notificationSettings.browser.enabled} onChange={e => handleNotificationSettingsChange('browser', 'enabled', e.target.checked)} className="form-checkbox h-4 w-4 text-blue-500" />
+                  <span className="text-white">Enable Browser Notifications</span>
+                </label>
+              </div>
+              {/* Security */}
+              <h3 className="text-lg font-semibold mb-4 mt-8">Security</h3>
+              <button className="px-4 py-2 bg-yellow-500 text-gray-900 rounded font-semibold">Change Password</button>
+            </div>
+          </div>
+        )}
+        {activeSection === 'plan' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Plan</h2>
+            {/* Pie chart for income split */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6 flex flex-col items-center">
+              <h3 className="text-lg font-semibold mb-4">Income Split Plan</h3>
+              {/* Pie chart SVG */}
+              {(() => {
+                const data = [
+                  { label: 'Needs', value: incomeSplit.needs, color: '#60a5fa' },
+                  { label: 'Wants', value: incomeSplit.wants, color: '#fbbf24' },
+                  { label: 'Savings', value: incomeSplit.savings, color: '#34d399' },
+                  { label: 'Investments', value: incomeSplit.investments, color: '#a78bfa' },
+                ];
+                const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
+                let cumulative = 0;
+                const radius = 60;
+                const cx = 70;
+                const cy = 70;
+                const pieSegments = data.map((d, i) => {
+                  const startAngle = (cumulative / total) * 2 * Math.PI;
+                  const endAngle = ((cumulative + d.value) / total) * 2 * Math.PI;
+                  const x1 = cx + radius * Math.sin(startAngle);
+                  const y1 = cy - radius * Math.cos(startAngle);
+                  const x2 = cx + radius * Math.sin(endAngle);
+                  const y2 = cy - radius * Math.cos(endAngle);
+                  const largeArc = d.value / total > 0.5 ? 1 : 0;
+                  const pathData = `M${cx},${cy} L${x1},${y1} A${radius},${radius} 0 ${largeArc} 1 ${x2},${y2} Z`;
+                  const midAngle = (startAngle + endAngle) / 2;
+                  const labelX = cx + (radius * 0.7) * Math.sin(midAngle);
+                  const labelY = cy - (radius * 0.7) * Math.cos(midAngle);
+                  const percent = Math.round((d.value / total) * 100);
+                  cumulative += d.value;
+                  return (
+                    <g key={d.label}>
+                      <path d={pathData} fill={d.color} />
+                      {d.value > 0 && (
+                        <text x={labelX} y={labelY} textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="#fff" fontWeight="bold">
+                          {percent}%
+                        </text>
+                      )}
+                    </g>
+                  );
+                });
+                return (
+                  <svg width="140" height="140" viewBox="0 0 140 140" className="mb-4">
+                    {pieSegments}
+                  </svg>
+                );
+              })()}
+              {/* Legend */}
+              <div className="flex flex-wrap gap-4 justify-center mt-4">
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{background:'#60a5fa'}}></span> <span className="text-white">Needs ({incomeSplit.needs}%)</span></div>
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{background:'#fbbf24'}}></span> <span className="text-white">Wants ({incomeSplit.wants}%)</span></div>
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{background:'#34d399'}}></span> <span className="text-white">Savings ({incomeSplit.savings}%)</span></div>
+                <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{background:'#a78bfa'}}></span> <span className="text-white">Investments ({incomeSplit.investments}%)</span></div>
+              </div>
+              {/* Suggestion for Needs if above 30% */}
+              {incomeSplit.needs > 30 && (
+                <div className="mt-8 bg-blue-900/80 border-l-4 border-blue-400 p-4 rounded text-white shadow">
+                  <div className="font-bold text-blue-300 mb-1">Suggestion</div>
+                  <div>
+                    Your current <span className="font-semibold">Needs</span> allocation is <span className="font-semibold">{incomeSplit.needs}%</span>. Consider reducing it to <span className="font-semibold">30%</span> or below. This will allow you to increase your <span className="font-semibold">Savings</span> and <span className="font-semibold">Investments</span>, which is better for your long-term financial health.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {activeSection === 'goals' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Goals</h2>
+            {/* List and manage savings goals */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+              <h3 className="text-lg font-semibold mb-4">Savings Goals</h3>
+              <ul className="divide-y divide-gray-700 mb-4">
+                {savingsGoals.map((goal, i) => {
+                  const isLargeGoal = goal.target >= 1000;
+                  let suggestion = '';
+                  if (isLargeGoal) {
+                    suggestion = `This is a large goal. Try to save at least 20% of your monthly income each month to reach your goal faster.`;
+                  } else {
+                    suggestion = `This is a small goal. Saving 5-10% of your monthly income each month can help you achieve it quickly.`;
+                  }
+                  return (
+                    <li key={i} className="flex flex-col gap-2 py-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-semibold text-white">{goal.name}</div>
+                          <div className="text-xs text-gray-400">Target: {formatCurrency(goal.target)} | Current: {formatCurrency(goal.current)}</div>
+                          <div className="text-xs text-blue-300 mt-1 font-semibold">{isLargeGoal ? 'Large Goal' : 'Small Goal'}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="number" min="0" value={goal.current} onChange={e => handleUpdateGoalCurrent(i, Number(e.target.value))} className="w-24 px-2 py-1 rounded bg-gray-700 border border-gray-600 text-white" />
+                          <button className="px-3 py-1 bg-red-600 text-white rounded" onClick={() => handleRemoveGoal(i)}>Remove</button>
+                        </div>
+                      </div>
+                      <div className="mt-1 text-xs text-green-300 bg-green-900/40 rounded p-2">
+                        {suggestion} {isLargeGoal && monthlyIncome > 0 && `For example, save $${Math.round(monthlyIncome * 0.2)} per month if your income is $${monthlyIncome}.`}
+                        {!isLargeGoal && monthlyIncome > 0 && `For example, save $${Math.round(monthlyIncome * 0.1)} per month if your income is $${monthlyIncome}.`}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <form onSubmit={handleAddGoal} className="flex gap-2">
+                <input type="text" placeholder="Goal name" value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="px-2 py-1 rounded bg-gray-700 border border-gray-600 text-white" />
+                <input type="number" placeholder="Target" value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} className="px-2 py-1 rounded bg-gray-700 border border-gray-600 text-white" />
+                <button type="submit" className="px-3 py-1 bg-green-600 text-white rounded">Add Goal</button>
+              </form>
+            </div>
+          </div>
+        )}
+        {activeSection === 'receipt' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Receipt Capture</h2>
+            {/* File upload for receipts */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+              <h3 className="text-lg font-semibold mb-4">Upload Receipt</h3>
+              <input type="file" accept="image/*,application/pdf" className="mb-4" multiple onChange={handleReceiptFileChange} />
+              <ul className="mb-4">
+                {selectedReceipts.length === 0 ? (
+                  <li className="text-gray-400">No file selected.</li>
+                ) : (
+                  selectedReceipts.map((file, idx) => (
+                    <li key={idx} className="flex items-center gap-4 mb-2">
+                      <span className="text-white">{file.name}</span>
+                      <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={() => handleUploadReceipt(idx)}>Upload</button>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+            {/* List of uploaded receipts */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow">
+              <h3 className="text-lg font-semibold mb-4">Uploaded Receipts</h3>
+              {uploadedReceipts.length === 0 ? (
+                <div className="text-gray-400">No receipts uploaded yet.</div>
+              ) : (
+                <ul>
+                  {uploadedReceipts.map((file, idx) => (
+                    <li key={idx} className="text-white mb-2">{file.name}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         )}
