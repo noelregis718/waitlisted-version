@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import NotificationService, { NotificationData, NotificationHistory, NotificationSettings } from '@/services/NotificationService'
 import { useAuth } from '@/contexts/AuthContext'
 import AIChatBox from '@/components/AIChatBox'
+import Tesseract from 'tesseract.js'
 
 interface IncomeSplit {
   needs: number
@@ -129,6 +130,8 @@ export default function LiveDashboardPage() {
   // Add state for receipt capture
   const [selectedReceipts, setSelectedReceipts] = useState([]);
   const [uploadedReceipts, setUploadedReceipts] = useState([]);
+  const [ocrResults, setOcrResults] = useState([]);
+  const [ocrLoading, setOcrLoading] = useState(false);
 
   // Get current month and year
   const now = new Date();
@@ -548,9 +551,28 @@ export default function LiveDashboardPage() {
     setSelectedReceipts(prev => [...prev, ...files]);
   }
 
-  function handleUploadReceipt(idx) {
-    setUploadedReceipts(prev => [...prev, selectedReceipts[idx]]);
+  async function handleUploadReceipt(idx) {
+    setOcrLoading(true);
+    const file = selectedReceipts[idx];
+    setUploadedReceipts(prev => [...prev, file]);
     setSelectedReceipts(prev => prev.filter((_, i) => i !== idx));
+
+    // Convert file to data URL for Tesseract
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const { data } = await Tesseract.recognize(e.target.result, 'eng');
+        setOcrResults(prev => [...prev, { name: file.name, text: data.text }]);
+      } catch (e) {
+        setOcrResults(prev => [...prev, { name: file.name, text: 'Could not extract text.' }]);
+      }
+      setOcrLoading(false);
+    };
+    reader.onerror = () => {
+      setOcrResults(prev => [...prev, { name: file.name, text: 'Could not read file.' }]);
+      setOcrLoading(false);
+    };
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -1136,11 +1158,12 @@ export default function LiveDashboardPage() {
                   selectedReceipts.map((file, idx) => (
                     <li key={idx} className="flex items-center gap-4 mb-2">
                       <span className="text-white">{file.name}</span>
-                      <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={() => handleUploadReceipt(idx)}>Upload</button>
+                      <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={() => handleUploadReceipt(idx)} disabled={ocrLoading}>Upload</button>
                     </li>
                   ))
                 )}
               </ul>
+              {ocrLoading && <div className="text-blue-400">Processing receipt, please wait...</div>}
             </div>
             {/* List of uploaded receipts */}
             <div className="bg-gray-800 rounded-xl p-6 shadow">
@@ -1150,7 +1173,12 @@ export default function LiveDashboardPage() {
               ) : (
                 <ul>
                   {uploadedReceipts.map((file, idx) => (
-                    <li key={idx} className="text-white mb-2">{file.name}</li>
+                    <li key={idx} className="text-white mb-2">
+                      <div>{file.name}</div>
+                      <div className="text-xs text-green-300 whitespace-pre-line mt-1">
+                        {ocrResults.find(r => r.name === file.name)?.text || 'No text extracted yet.'}
+                      </div>
+                    </li>
                   ))}
                 </ul>
               )}
