@@ -2,10 +2,12 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
-import NotificationService, { NotificationData, NotificationHistory, NotificationSettings } from '@/services/NotificationService'
+import NotificationService from '@/services/NotificationService'
+import { NotificationData, NotificationHistory, NotificationSettings } from '@/types/notifications'
 import { useAuth } from '@/contexts/AuthContext'
 import AIChatBox from '@/components/AIChatBox'
 import Tesseract from 'tesseract.js'
+import { usePlaidLink } from 'react-plaid-link'
 
 interface IncomeSplit {
   needs: number
@@ -69,6 +71,54 @@ const ReceiptIcon = () => (
   <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 8h8M8 12h8M8 16h4" /></svg>
 );
 
+// Add at the top of the file:
+const CATEGORY_MAP: { [key: string]: string } = {
+  'Rent': 'housing',
+  'Mortgage': 'housing',
+  'Utilities': 'utilities',
+  'Electric': 'utilities',
+  'Gas': 'utilities',
+  'Water': 'utilities',
+  'Transportation': 'transportation',
+  'Taxi': 'transportation',
+  'Public Transport': 'transportation',
+  'Groceries': 'food',
+  'Restaurants': 'food',
+  'Dining': 'food',
+  'Entertainment': 'entertainment',
+  'Movies': 'entertainment',
+  'Music': 'entertainment',
+  'Miscellaneous': 'miscellaneous',
+  // Add more mappings as needed
+};
+
+function categorizeTransaction(txn: any) {
+  // Try to map Plaid's category to our dashboard categories
+  if (txn.category && txn.category.length > 0) {
+    for (const cat of txn.category) {
+      if (CATEGORY_MAP[cat]) return CATEGORY_MAP[cat];
+    }
+  }
+  return 'other';
+}
+
+function getBudgetSummary(transactions: any[]) {
+  const summary: { [key: string]: number } = {
+    housing: 0,
+    utilities: 0,
+    transportation: 0,
+    food: 0,
+    entertainment: 0,
+    miscellaneous: 0,
+    other: 0,
+  };
+  for (const txn of transactions) {
+    const cat = categorizeTransaction(txn);
+    summary[cat] += txn.amount;
+  }
+  return summary;
+}
+
 export default function LiveDashboardPage() {
   const router = useRouter()
   const notificationService = NotificationService.getInstance()
@@ -128,10 +178,14 @@ export default function LiveDashboardPage() {
   // Store user expenses in a ref for use in generateTransactions
   const userExpensesRef = useRef<any[]>([]);
   // Add state for receipt capture
-  const [selectedReceipts, setSelectedReceipts] = useState([]);
-  const [uploadedReceipts, setUploadedReceipts] = useState([]);
-  const [ocrResults, setOcrResults] = useState([]);
+  const [selectedReceipts, setSelectedReceipts] = useState<any[]>([]);
+  const [uploadedReceipts, setUploadedReceipts] = useState<any[]>([]);
+  const [ocrResults, setOcrResults] = useState<any[]>([]);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [plaidLoading, setPlaidLoading] = useState(false);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
 
   // Get current month and year
   const now = new Date();
@@ -186,7 +240,7 @@ export default function LiveDashboardPage() {
   // Simulate user transactions from bills/expenses for the last 6 months
   const generateTransactions = () => {
     const now = new Date();
-    let txs = [];
+    let txs: any[] = [];
     // Only include the last 6 months, including the current month
     for (let m = 0; m < 6; m++) {
       // Calculate the correct month and year
@@ -202,7 +256,7 @@ export default function LiveDashboardPage() {
       if (m === 1 && userExpensesRef.current.length > 0) {
         const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
         const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-        monthBills = userExpensesRef.current.map((exp, idx) => ({
+        monthBills = userExpensesRef.current.map((exp: any, idx) => ({
           name: exp.name,
           amount: exp.amount,
           dueDate: new Date(prevMonthYear, prevMonth, 5 + idx),
@@ -320,7 +374,7 @@ export default function LiveDashboardPage() {
         const now = new Date();
         const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
         const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-        userBills = expenses.filter((exp) => exp.amount > 0).map((exp, idx) => ({
+        userBills = expenses.filter((exp: any) => exp.amount > 0).map((exp: any, idx: number) => ({
           name: exp.name,
           amount: exp.amount,
           dueDate: new Date(prevMonthYear, prevMonth, 5 + idx), // e.g., 5th, 6th, ... of last month
@@ -546,12 +600,13 @@ export default function LiveDashboardPage() {
   const statsTotalInvestments = statsCashFlowData.reduce((sum, d) => sum + d.investments, 0);
   const statsNetCashFlow = statsTotalIncome - statsTotalExpenses - statsTotalSavings - statsTotalInvestments;
 
-  function handleReceiptFileChange(e) {
+  function handleReceiptFileChange(e: any) {
+    if (!e.target) return;
     const files = Array.from(e.target.files || []);
-    setSelectedReceipts(prev => [...prev, ...files]);
+    setSelectedReceipts((prev: any[]) => [...prev, ...files]);
   }
 
-  async function handleUploadReceipt(idx) {
+  async function handleUploadReceipt(idx: any) {
     setOcrLoading(true);
     const file = selectedReceipts[idx];
     setUploadedReceipts(prev => [...prev, file]);
@@ -560,8 +615,13 @@ export default function LiveDashboardPage() {
     // Convert file to data URL for Tesseract
     const reader = new FileReader();
     reader.onload = async (e) => {
+      if (!e.target?.result) {
+        setOcrResults(prev => [...prev, { name: file.name, text: 'Could not read file.' }]);
+        setOcrLoading(false);
+        return;
+      }
       try {
-        const { data } = await Tesseract.recognize(e.target.result, 'eng');
+        const { data } = await Tesseract.recognize(e.target.result as string, 'eng');
         setOcrResults(prev => [...prev, { name: file.name, text: data.text }]);
       } catch (e) {
         setOcrResults(prev => [...prev, { name: file.name, text: 'Could not extract text.' }]);
@@ -573,6 +633,59 @@ export default function LiveDashboardPage() {
       setOcrLoading(false);
     };
     reader.readAsDataURL(file);
+  }
+
+  const handlePlaidSuccess = async function(publicToken: string, metadata: any) {
+    try {
+      const res = await fetch('/api/plaid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'exchange_public_token', data: { public_token: publicToken } }),
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        // Fetch accounts
+        const accountsRes = await fetch('/api/plaid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'fetch_accounts', data: { access_token: data.access_token } }),
+        });
+        const accountsData = await accountsRes.json();
+        setAccounts(accountsData.accounts || []);
+        // Fetch transactions (last 30 days)
+        const endDate = new Date().toISOString().slice(0, 10);
+        const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const transactionsRes = await fetch('/api/plaid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'fetch_transactions', data: { access_token: data.access_token, start_date: startDate, end_date: endDate } }),
+        });
+        const transactionsData = await transactionsRes.json();
+        setTransactions(transactionsData.transactions || []);
+        console.log('Fetched accounts:', accountsData.accounts);
+        console.log('Fetched transactions:', transactionsData.transactions);
+
+        // Step 3: Notifications - check for overspending
+        const budgetSummary = getBudgetSummary(transactionsData.transactions || []);
+        Object.entries(budgetSummary).forEach(([cat, total]) => {
+          if (total > 1000) { // Example threshold
+            NotificationService.getInstance().sendNotification({
+              type: 'overspend',
+              title: `Overspending Alert: ${cat}`,
+              message: `You've spent ${formatCurrency(total)} on ${cat} this month.`,
+              amount: total,
+              category: cat,
+              priority: 'high',
+            });
+          }
+        });
+      } else {
+        console.error('Failed to exchange public token:', data);
+      }
+    } catch (error) {
+      console.error('Error exchanging public token:', error);
+    }
+    setLinkToken(null); // Close Plaid Link
   }
 
   return (
@@ -841,7 +954,7 @@ export default function LiveDashboardPage() {
                   <h3 className="text-xl font-bold mb-2 text-blue-400">{month}</h3>
                   <div className="bg-gray-800 rounded-xl shadow p-4">
                     <ul className="divide-y divide-gray-700">
-                      {txs.map((tx, i) => (
+                      {(txs as any[]).map((tx: any, i: number) => (
                         <li key={i} className="flex justify-between items-center py-3">
                           <div>
                             <div className="font-semibold text-white">{tx.name}</div>
@@ -940,7 +1053,92 @@ export default function LiveDashboardPage() {
               <div className="text-gray-300">Balance: {formatCurrency(totalBalance)}</div>
             </div>
             {/* Add more accounts or link new accounts here */}
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">Link New Account</button>
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold"
+              onClick={async () => {
+                setPlaidLoading(true);
+                const res = await fetch('/api/plaid', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'create_link_token' }),
+                });
+                const data = await res.json();
+                setLinkToken(data.link_token);
+                setPlaidLoading(false);
+              }}
+              disabled={plaidLoading}
+            >
+              {plaidLoading ? 'Loading...' : 'Link New Account'}
+            </button>
+            {linkToken && (
+              <PlaidLinkComponent linkToken={linkToken} onSuccess={handlePlaidSuccess} />
+            )}
+            {accounts.length > 0 ? (
+              <>
+                <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+                  <div className="text-lg font-semibold mb-2">Linked Accounts</div>
+                  {accounts.map((acct, idx) => (
+                    <div key={acct.account_id} className="mb-4">
+                      <div className="text-gray-300">Name: {acct.name}</div>
+                      <div className="text-gray-300">Type: {acct.type} ({acct.subtype})</div>
+                      <div className="text-gray-300">Mask: {acct.mask}</div>
+                      <div className="text-gray-300">Balance: {acct.balances?.current != null ? formatCurrency(acct.balances.current) : 'N/A'}</div>
+                    </div>
+                  ))}
+                </div>
+                {transactions.length > 0 && (
+                  <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+                    <div className="text-lg font-semibold mb-2">Recent Transactions</div>
+                    <table className="min-w-full text-left text-gray-300">
+                      <thead>
+                        <tr>
+                          <th className="py-2 px-4">Date</th>
+                          <th className="py-2 px-4">Name</th>
+                          <th className="py-2 px-4">Account</th>
+                          <th className="py-2 px-4">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map((txn, idx) => (
+                          <tr key={txn.transaction_id} className="border-b border-gray-700">
+                            <td className="py-2 px-4">{txn.date}</td>
+                            <td className="py-2 px-4">{txn.name}</td>
+                            <td className="py-2 px-4">{accounts.find(a => a.account_id === txn.account_id)?.name || 'N/A'}</td>
+                            <td className="py-2 px-4">{formatCurrency(txn.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {transactions.length > 0 && (
+                  <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+                    <div className="text-lg font-semibold mb-2">Budget Summary (Real Data)</div>
+                    <table className="min-w-full text-left text-gray-300">
+                      <thead>
+                        <tr>
+                          <th className="py-2 px-4">Category</th>
+                          <th className="py-2 px-4">Total Spent</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(getBudgetSummary(transactions)).map(([cat, total]) => (
+                          <tr key={cat} className="border-b border-gray-700">
+                            <td className="py-2 px-4 capitalize">{cat}</td>
+                            <td className="py-2 px-4">{formatCurrency(total)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {transactions.length > 0 && (
+                  <PieChart data={getBudgetSummary(transactions)} />
+                )}
+              </>
+            ) : (
+              <div className="text-gray-400">No accounts linked yet. Link a bank account to see your data here.</div>
+            )}
           </div>
         )}
         {activeSection === 'billpay' && (
@@ -979,7 +1177,7 @@ export default function LiveDashboardPage() {
                   return billsToShow.length === 0 ? (
                     <li className="text-gray-400">No upcoming bills.</li>
                   ) : (
-                    billsToShow.map((bill, i) => (
+                    billsToShow.map((bill: any, i: number) => (
                       <li key={i} className="flex justify-between items-center py-3">
                         <div>
                           <div className="font-semibold text-white">{bill.name}</div>
@@ -1221,4 +1419,64 @@ export default function LiveDashboardPage() {
       </div>
     </div>
   )
-} 
+}
+
+function PlaidLinkComponent({ linkToken, onSuccess }: { linkToken: string, onSuccess: (publicToken: string, metadata: any) => void }) {
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
+    onSuccess,
+  });
+  // Open Plaid Link when ready
+  useEffect(() => { if (ready) open(); }, [ready, open]);
+  return null;
+}
+
+// Add this PieChart component at the bottom of the file:
+function PieChart({ data }: { data: { [key: string]: number } }) {
+  const categories = Object.keys(data);
+  const total = Object.values(data).reduce((sum, v) => sum + v, 0) || 1;
+  let cumulative = 0;
+  const radius = 60;
+  const cx = 70;
+  const cy = 70;
+  const colors = [
+    '#60a5fa', // housing
+    '#fbbf24', // utilities
+    '#34d399', // transportation
+    '#a78bfa', // food
+    '#f472b6', // entertainment
+    '#f87171', // miscellaneous
+    '#d1d5db', // other
+  ];
+  const pieSegments = categories.map((cat, i) => {
+    const value = data[cat];
+    const startAngle = (cumulative / total) * 2 * Math.PI;
+    const endAngle = ((cumulative + value) / total) * 2 * Math.PI;
+    const x1 = cx + radius * Math.sin(startAngle);
+    const y1 = cy - radius * Math.cos(startAngle);
+    const x2 = cx + radius * Math.sin(endAngle);
+    const y2 = cy - radius * Math.cos(endAngle);
+    const largeArc = value / total > 0.5 ? 1 : 0;
+    const pathData = `M${cx},${cy} L${x1},${y1} A${radius},${radius} 0 ${largeArc} 1 ${x2},${y2} Z`;
+    const percent = Math.round((value / total) * 100);
+    cumulative += value;
+    return (
+      <g key={cat}>
+        <path d={pathData} fill={colors[i % colors.length]} />
+        {value > 0 && (
+          <text x={cx + (radius * 0.7) * Math.sin((startAngle + endAngle) / 2)} y={cy - (radius * 0.7) * Math.cos((startAngle + endAngle) / 2)} textAnchor="middle" dominantBaseline="middle" fontSize="12" fill="#fff">{percent}%</text>
+        )}
+      </g>
+    );
+  });
+  return (
+    <div className="flex flex-col items-center">
+      <svg width="140" height="140" viewBox="0 0 140 140">{pieSegments}</svg>
+      <div className="flex flex-wrap gap-4 justify-center mt-4">
+        {categories.map((cat, i) => (
+          <div key={cat} className="flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{background:colors[i % colors.length]}}></span> <span className="text-white capitalize">{cat}</span></div>
+        ))}
+      </div>
+    </div>
+  );
+}

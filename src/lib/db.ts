@@ -65,4 +65,13 @@ function generateAccountNumber() {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString()
 }
 
+// Utility: Reset a user's password by email
+export async function resetUserPassword(email: string, newPassword: string) {
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  return prisma.user.update({
+    where: { email },
+    data: { password: hashedPassword },
+  });
+}
+
 export { prisma } 
