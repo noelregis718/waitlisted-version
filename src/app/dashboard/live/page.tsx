@@ -119,6 +119,57 @@ function getBudgetSummary(transactions: any[]) {
   return summary;
 }
 
+// Place this at the very top of the file, before any component definitions
+function getLastMonthTimeline(transactions) {
+  if (!transactions || transactions.length === 0) return [];
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Filter transactions for last month
+  const txs = transactions.filter(tx => {
+    const d = new Date(tx.date);
+    return d >= lastMonth && d < thisMonth;
+  }).sort((a, b) => new Date(a.date) - new Date(b.date));
+  // Build timeline: start with balance at beginning of last month
+  let timeline = [];
+  let balance = 0;
+  // Optionally, you could estimate starting balance from previous month
+  txs.forEach(tx => {
+    balance += tx.amount;
+    timeline.push({
+      date: tx.date,
+      balance: Math.round(balance),
+      label: tx.amount > 0 ? `Credited $${tx.amount}` : `Debited $${Math.abs(tx.amount)}`,
+      mood: balance > 1000 ? '😃' : balance < 200 ? '😬' : '🙂',
+    });
+  });
+  return timeline;
+}
+
+// Helper to get last 30 days timeline events
+function getLast30DaysTimeline(transactions) {
+  if (!transactions || transactions.length === 0) return [];
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  // Filter transactions for last 30 days
+  const txs = transactions.filter(tx => {
+    const d = new Date(tx.date);
+    return d >= thirtyDaysAgo && d <= now;
+  }).sort((a, b) => new Date(a.date) - new Date(b.date));
+  let timeline = [];
+  let balance = 0;
+  txs.forEach(tx => {
+    balance += tx.amount;
+    timeline.push({
+      date: tx.date,
+      balance: Math.round(balance),
+      label: tx.amount > 0 ? `Credited $${tx.amount}` : `Debited $${Math.abs(tx.amount)}`,
+      mood: balance > 1000 ? '😃' : balance < 200 ? '😬' : '🙂',
+    });
+  });
+  return timeline;
+}
+
 export default function LiveDashboardPage() {
   const router = useRouter()
   const notificationService = NotificationService.getInstance()
@@ -742,6 +793,65 @@ export default function LiveDashboardPage() {
     }
   }
 
+  // Helper to calculate AnkTrust score
+  function calculateAnkTrustScore(transactions) {
+    // Example logic: base score, penalize for outlier spending, reward for consistency
+    let score = 750;
+    if (!transactions || transactions.length === 0) return 745;
+    // Behavior pattern: check if last 3 transactions are similar to previous 60 days
+    const now = new Date();
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    const recent = transactions.slice(0, 3);
+    const past = transactions.filter(tx => new Date(tx.date) < recent[recent.length-1]?.date && new Date(tx.date) > sixtyDaysAgo);
+    let behaviorPenalty = 0;
+    recent.forEach(tx => {
+      const similar = past.find(p => p.category === tx.category && Math.abs(p.amount - tx.amount) < 0.2 * tx.amount);
+      if (!similar) behaviorPenalty += 20;
+    });
+    score -= behaviorPenalty;
+    // Spending flow: penalize for large outlier transactions
+    const avg = transactions.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) / transactions.length;
+    transactions.forEach(tx => {
+      if (Math.abs(tx.amount) > 2 * avg) score -= 15;
+    });
+    // Clamp score
+    score = Math.max(420, Math.min(820, Math.round(score)));
+    return score;
+  }
+
+  function getAnkTrustCategory(score) {
+    if (score >= 820) return { color: 'bg-blue-700', emoji: '🔵', label: 'High Trust', message: 'Seamless access' };
+    if (score >= 610) return { color: 'bg-yellow-500', emoji: '🟡', label: 'Moderate', message: '2FA triggered' };
+    return { color: 'bg-red-600', emoji: '🔴', label: 'Risky', message: 'Identity re-auth required, transfer blocked' };
+  }
+
+  // Helper to get last month's timeline events
+  function getLastMonthTimeline(transactions) {
+    if (!transactions || transactions.length === 0) return [];
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Filter transactions for last month
+    const txs = transactions.filter(tx => {
+      const d = new Date(tx.date);
+      return d >= lastMonth && d < thisMonth;
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Build timeline: start with balance at beginning of last month
+    let timeline = [];
+    let balance = 0;
+    // Optionally, you could estimate starting balance from previous month
+    txs.forEach(tx => {
+      balance += tx.amount;
+      timeline.push({
+        date: tx.date,
+        balance: Math.round(balance),
+        label: tx.amount > 0 ? `Credited $${tx.amount}` : `Debited $${Math.abs(tx.amount)}`,
+        mood: balance > 1000 ? '😃' : balance < 200 ? '😬' : '🙂',
+      });
+    });
+    return timeline;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white pt-24 flex flex-row">
       {/* Side Panel */}
@@ -985,6 +1095,26 @@ export default function LiveDashboardPage() {
                   </div>
                 </div>
               </div>
+              {/* After the dashboard grid (recent transactions, credit, top spending), insert the AnkTrust Score card */}
+              <div className="max-w-3xl mx-auto w-full">
+                {(() => {
+                  const score = calculateAnkTrustScore(transactions);
+                  const cat = getAnkTrustCategory(score);
+                  let trustSentence = '';
+                  if (cat.label === 'High Trust') {
+                    trustSentence = `${cat.emoji} Your AnkTrust score is ${score} — enjoy seamless access!`;
+                  } else if (cat.label === 'Moderate') {
+                    trustSentence = `${cat.emoji} Your AnkTrust score is ${score} — 2FA will be triggered for extra security.`;
+                  } else {
+                    trustSentence = `${cat.emoji} Your AnkTrust score is ${score} — identity re-auth required, transfers temporarily blocked.`;
+                  }
+                  return (
+                    <div className="w-full flex justify-center items-center mb-8" style={{marginTop: '2.5rem'}}>
+                      <span className="text-lg md:text-xl font-semibold text-gray-100 text-center" style={{letterSpacing: '0.01em'}}>{trustSentence}</span>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         )}
@@ -1094,6 +1224,9 @@ export default function LiveDashboardPage() {
                 <div className="flex items-center gap-2"><span className="w-4 h-2 bg-purple-300 rounded inline-block"></span> <span className="text-xs text-gray-200">Investments</span></div>
               </div>
             </div>
+            {/* Timeline Horizon for Last Month */}
+            {/* Timeline Horizon for Last 30 Days */}
+            {/* ...rest of statistics page... */}
           </div>
         )}
         {activeSection === 'accounts' && (
@@ -1541,6 +1674,41 @@ function PieChart({ data }: { data: { [key: string]: number } }) {
         {categories.map((cat, i) => (
           <div key={cat} className="flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{background:colors[i % colors.length]}}></span> <span className="text-white capitalize">{cat}</span></div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// TimelineHorizon component
+function TimelineHorizon({ transactions }) {
+  const timeline = useMemo(() => getLast30DaysTimeline(transactions), [transactions]);
+  const [index, setIndex] = useState(timeline.length > 0 ? timeline.length - 1 : 0);
+  if (timeline.length === 0) {
+    return (
+      <div className="w-full flex flex-col items-center mt-10 mb-8">
+        <div className="text-gray-400 text-lg">No transaction data available for the last 30 days.</div>
+      </div>
+    );
+  }
+  const current = timeline[index];
+  return (
+    <div className="w-full flex flex-col items-center mt-10 mb-8">
+      <div className="w-full max-w-2xl flex flex-col items-center">
+        <input
+          type="range"
+          min={0}
+          max={timeline.length - 1}
+          value={index}
+          onChange={e => setIndex(Number(e.target.value))}
+          className="w-full accent-blue-500"
+        />
+        <div className="flex flex-col items-center mt-4">
+          <span className="text-2xl font-bold flex items-center gap-2">
+            {current.mood} <span className="text-blue-400">{new Date(current.date).toLocaleDateString()}</span>
+          </span>
+          <span className="text-lg font-semibold text-white mt-1">Balance: ${current.balance}</span>
+          <span className="text-sm text-gray-300 mt-1">{current.label}</span>
+        </div>
       </div>
     </div>
   );
