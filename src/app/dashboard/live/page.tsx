@@ -186,6 +186,9 @@ export default function LiveDashboardPage() {
   const [plaidLoading, setPlaidLoading] = useState(false);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  // Goals state
+  const [goals, setGoals] = useState([]);
+  const [statusMessage, setStatusMessage] = useState('');
 
   // Get current month and year
   const now = new Date();
@@ -496,6 +499,15 @@ export default function LiveDashboardPage() {
     localStorage.setItem(SAVINGS_GOALS_KEY, JSON.stringify(savingsGoals));
   }, [savingsGoals]);
 
+  // Fetch goals/subaccounts from backend
+  useEffect(() => {
+    if (activeSection === 'goals') {
+      fetch('/api/goals')
+        .then(res => res.json())
+        .then(setGoals);
+    }
+  }, [activeSection]);
+
   // Handler to add a new goal
   const handleAddGoal = (e: React.FormEvent) => {
     e.preventDefault();
@@ -686,6 +698,48 @@ export default function LiveDashboardPage() {
       console.error('Error exchanging public token:', error);
     }
     setLinkToken(null); // Close Plaid Link
+  }
+
+  // Handler to create a new goal (subaccount)
+  async function handleCreateGoal() {
+    const name = prompt('Enter goal name:');
+    if (!name) return;
+    const target = prompt('Enter target amount for this goal:');
+    if (!target || isNaN(Number(target))) return;
+    setStatusMessage('Creating goal...');
+    const res = await fetch('/api/goals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, target: Number(target) }),
+    });
+    if (res.ok) {
+      setStatusMessage('Goal created!');
+      setGoals(await (await fetch('/api/goals')).json());
+    } else {
+      setStatusMessage('Failed to create goal.');
+    }
+  }
+
+  // Handler to add money to a goal (subaccount)
+  async function handleAddMoney(goalId) {
+    const amount = prompt('Enter amount to add:');
+    if (!amount || isNaN(Number(amount))) return;
+    setStatusMessage('Adding money...');
+    const res = await fetch(`/api/goals/${goalId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: Number(amount) }),
+    });
+    if (res.ok) {
+      setStatusMessage('Money added!');
+      setGoals(await (await fetch('/api/goals')).json());
+    } else {
+      setStatusMessage('Failed to add money.');
+      // Try to refetch goals in case of error
+      setGoals(await (await fetch('/api/goals')).json());
+      const errorText = await res.text();
+      console.error('PATCH /api/goals/:id failed:', errorText);
+    }
   }
 
   return (
@@ -1298,50 +1352,6 @@ export default function LiveDashboardPage() {
             </div>
           </div>
         )}
-        {activeSection === 'goals' && (
-          <div className="max-w-3xl mx-auto py-12">
-            <h2 className="text-3xl font-bold mb-6">Goals</h2>
-            {/* List and manage savings goals */}
-            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
-              <h3 className="text-lg font-semibold mb-4">Savings Goals</h3>
-              <ul className="divide-y divide-gray-700 mb-4">
-                {savingsGoals.map((goal, i) => {
-                  const isLargeGoal = goal.target >= 1000;
-                  let suggestion = '';
-                  if (isLargeGoal) {
-                    suggestion = `This is a large goal. Try to save at least 20% of your monthly income each month to reach your goal faster.`;
-                  } else {
-                    suggestion = `This is a small goal. Saving 5-10% of your monthly income each month can help you achieve it quickly.`;
-                  }
-                  return (
-                    <li key={i} className="flex flex-col gap-2 py-3">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-semibold text-white">{goal.name}</div>
-                          <div className="text-xs text-gray-400">Target: {formatCurrency(goal.target)} | Current: {formatCurrency(goal.current)}</div>
-                          <div className="text-xs text-blue-300 mt-1 font-semibold">{isLargeGoal ? 'Large Goal' : 'Small Goal'}</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input type="number" min="0" value={goal.current} onChange={e => handleUpdateGoalCurrent(i, Number(e.target.value))} className="w-24 px-2 py-1 rounded bg-gray-700 border border-gray-600 text-white" />
-                          <button className="px-3 py-1 bg-red-600 text-white rounded" onClick={() => handleRemoveGoal(i)}>Remove</button>
-                        </div>
-                      </div>
-                      <div className="mt-1 text-xs text-green-300 bg-green-900/40 rounded p-2">
-                        {suggestion} {isLargeGoal && monthlyIncome > 0 && `For example, save $${Math.round(monthlyIncome * 0.2)} per month if your income is $${monthlyIncome}.`}
-                        {!isLargeGoal && monthlyIncome > 0 && `For example, save $${Math.round(monthlyIncome * 0.1)} per month if your income is $${monthlyIncome}.`}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              <form onSubmit={handleAddGoal} className="flex gap-2">
-                <input type="text" placeholder="Goal name" value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="px-2 py-1 rounded bg-gray-700 border border-gray-600 text-white" />
-                <input type="number" placeholder="Target" value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} className="px-2 py-1 rounded bg-gray-700 border border-gray-600 text-white" />
-                <button type="submit" className="px-3 py-1 bg-green-600 text-white rounded">Add Goal</button>
-              </form>
-            </div>
-          </div>
-        )}
         {activeSection === 'receipt' && (
           <div className="max-w-3xl mx-auto py-12">
             <h2 className="text-3xl font-bold mb-6">Receipt Capture</h2>
@@ -1380,6 +1390,61 @@ export default function LiveDashboardPage() {
                   ))}
                 </ul>
               )}
+            </div>
+          </div>
+        )}
+        {activeSection === 'goals' && (
+          <div className="max-w-3xl mx-auto py-12">
+            <h2 className="text-3xl font-bold mb-6">Goals</h2>
+            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-4"
+                onClick={handleCreateGoal}
+              >
+                Create a new goal
+              </button>
+              <ul className="divide-y divide-gray-700 mb-4">
+                {goals.length === 0 ? (
+                  <li className="text-gray-400">No goals yet. Create your first goal!</li>
+                ) : (
+                  goals.map((goal, i) => (
+                    <li key={goal.id} className="flex flex-col gap-2 py-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-semibold text-white">{goal.name}</div>
+                          <div className="text-xs text-gray-400">Target: {goal.target ? `$${goal.target}` : 'N/A'}</div>
+                          <div className="text-xs text-gray-400">Balance: {goal.balance ? `$${goal.balance}` : '$0'}</div>
+                          <div className="text-xs text-green-400">Remaining: {goal.target && goal.balance !== undefined ? `$${Math.max(goal.target - goal.balance, 0)}` : 'N/A'}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="px-3 py-1 bg-green-600 text-white rounded"
+                            onClick={() => handleAddMoney(goal.id)}
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <div className="text-xs text-blue-300 font-semibold mb-1">Transactions</div>
+                        {goal.transactions && goal.transactions.length > 0 ? (
+                          <ul className="text-xs text-gray-200">
+                            {goal.transactions.map((tx, idx) => (
+                              <li key={idx} className="flex justify-between">
+                                <span>{tx.description}</span>
+                                <span>{tx.amount > 0 ? '+' : ''}{tx.amount}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-xs text-gray-500">No transactions yet.</div>
+                        )}
+                      </div>
+                    </li>
+                  ))
+                )}
+              </ul>
+              {statusMessage && <div className="text-green-400 mt-2">{statusMessage}</div>}
             </div>
           </div>
         )}
