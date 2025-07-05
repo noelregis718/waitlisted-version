@@ -852,6 +852,16 @@ export default function LiveDashboardPage() {
     return timeline;
   }
 
+  // Get the latest expense breakdown from localStorage or dashboard state
+  let expenseBreakdown = [];
+  let monthlyExpenses = 0;
+  if (typeof window !== 'undefined') {
+    try {
+      expenseBreakdown = JSON.parse(localStorage.getItem('monthlyExpenses') || '[]');
+      monthlyExpenses = expenseBreakdown.reduce((sum, e) => sum + (e.amount || 0), 0);
+    } catch {}
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white pt-24 flex flex-row">
       {/* Side Panel */}
@@ -1610,7 +1620,7 @@ export default function LiveDashboardPage() {
               </button>
             </div>
             <div className="flex-1 min-h-0">
-              <AIChatBox />
+              <AIChatBox monthlyIncome={monthlyIncome} monthlyExpenses={monthlyExpenses} expenseBreakdown={expenseBreakdown} />
             </div>
           </div>
         )}

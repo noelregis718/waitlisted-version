@@ -203,11 +203,21 @@ export default function DashboardPage() {
     }).format(amount)
   }
 
-  const handleIncomeSubmit = (e: React.FormEvent) => {
+  const handleIncomeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement
     const amount = Number(form.amount.value)
     setMonthlyIncome(amount)
+    // Save to backend
+    try {
+      await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ monthlyIncome: amount })
+      })
+    } catch (err) {
+      console.error('Failed to update monthly income in backend', err)
+    }
     setShowIncomeForm(false)
     setShowGoalsForm(true)
   }
@@ -372,9 +382,31 @@ export default function DashboardPage() {
     setShowLifestyleForm(true);
   };
 
-  const handleSpendingSubmit = () => {
+  const handleSpendingSubmit = async () => {
     // Save monthly expenses to localStorage for use in live dashboard
     localStorage.setItem('monthlyExpenses', JSON.stringify(budgetingPreferences.monthlyExpenses));
+    // Save each expense to backend as a transaction
+    try {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      for (const exp of budgetingPreferences.monthlyExpenses) {
+        if (exp.amount > 0) {
+          await fetch('/api/transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: exp.amount,
+              type: 'expense',
+              category: exp.name,
+              date: new Date(year, month, 1).toISOString(),
+            })
+          })
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save expenses to backend', err)
+    }
     setShowSpendingForm(false);
     setShowInvestmentForm(true);
   };

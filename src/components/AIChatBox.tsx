@@ -5,7 +5,20 @@ interface Message {
   content: string;
 }
 
-const AIChatBox: React.FC = () => {
+interface ExpenseCategory {
+  id: string;
+  name: string;
+  amount: number;
+  percentage: number;
+}
+
+interface AIChatBoxProps {
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  expenseBreakdown: ExpenseCategory[];
+}
+
+const AIChatBox: React.FC<AIChatBoxProps> = ({ monthlyIncome, monthlyExpenses, expenseBreakdown }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +40,7 @@ const AIChatBox: React.FC = () => {
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
+        body: JSON.stringify({ message: input, monthlyIncome, monthlyExpenses, expenseBreakdown })
       });
       if (!res.ok) throw new Error('Failed to get AI response');
       const data = await res.json();
