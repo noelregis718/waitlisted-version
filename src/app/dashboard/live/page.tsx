@@ -240,6 +240,49 @@ export default function LiveDashboardPage() {
   // Goals state
   const [goals, setGoals] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
+  // Place this at the top of the LiveDashboardPage component, after other useState hooks
+  const [billStates, setBillStates] = useState(() => {
+    let billsToShow = [];
+    if (typeof window !== 'undefined') {
+      const storedExpenses = localStorage.getItem('monthlyExpenses');
+      if (storedExpenses) {
+        try {
+          const expenses = JSON.parse(storedExpenses).filter((exp) => exp.amount > 0);
+          const now = new Date();
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth();
+          let day = now.getDate() + 7;
+          billsToShow = expenses.map((exp, idx) => {
+            let dueDay = day + idx * 2;
+            const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+            if (dueDay > lastDay) dueDay = lastDay;
+            return {
+              name: exp.name,
+              amount: exp.amount,
+              dueDate: new Date(currentYear, currentMonth, dueDay),
+              priority: idx === 0 ? 'High' : idx === 1 ? 'Medium' : 'Low',
+              autoPay: idx === 0,
+            };
+          });
+        } catch (e) {}
+      }
+    }
+    if (billsToShow.length === 0) {
+      billsToShow = [
+        { name: 'Rent', amount: 1200, dueDate: new Date('2025-07-13'), priority: 'High', autoPay: true },
+        { name: 'Electricity', amount: 150, dueDate: new Date('2025-07-11'), priority: 'Medium', autoPay: false },
+        { name: 'Internet', amount: 80, dueDate: new Date('2025-07-09'), priority: 'Low', autoPay: false },
+      ];
+    }
+    return billsToShow;
+  });
+
+  const handlePriorityChange = (idx, value) => {
+    setBillStates((prev) => prev.map((bill, i) => i === idx ? { ...bill, priority: value } : bill));
+  };
+  const handleAutoPayChange = (idx) => {
+    setBillStates((prev) => prev.map((bill, i) => i === idx ? { ...bill, autoPay: !bill.autoPay } : bill));
+  };
 
   // Get current month and year
   const now = new Date();
@@ -1340,54 +1383,45 @@ export default function LiveDashboardPage() {
         )}
         {activeSection === 'billpay' && (
           <div className="max-w-3xl mx-auto py-12">
-            <h2 className="text-3xl font-bold mb-6">Bill Pay</h2>
-            {/* List of bills and pay option */}
-            <div className="bg-gray-800 rounded-xl p-6 shadow mb-6">
-              <h3 className="text-lg font-semibold mb-4">Upcoming Bills</h3>
+            <h2 className="text-4xl font-bold mb-8">Bill Pay</h2>
+            <div className="bg-gray-800 rounded-2xl p-8 shadow mb-6">
+              <h3 className="text-2xl font-semibold mb-6">Upcoming Bills</h3>
               <ul className="divide-y divide-gray-700">
-                {(() => {
-                  // Get user expenses from localStorage
-                  let billsToShow = [];
-                  if (typeof window !== 'undefined') {
-                    const storedExpenses = localStorage.getItem('monthlyExpenses');
-                    if (storedExpenses) {
-                      try {
-                        const expenses = JSON.parse(storedExpenses).filter((exp: any) => exp.amount > 0);
-                        const now = new Date();
-                        const currentYear = now.getFullYear();
-                        const currentMonth = now.getMonth();
-                        let day = now.getDate() + 7; // Start 1 week from today
-                        billsToShow = expenses.map((exp: any, idx: number) => {
-                          // Ensure the due date is after today, but within this month
-                          let dueDay = day + idx * 3;
-                          const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
-                          if (dueDay > lastDay) dueDay = lastDay;
-                          return {
-                            name: exp.name,
-                            amount: exp.amount,
-                            dueDate: new Date(currentYear, currentMonth, dueDay),
-                          };
-                        });
-                      } catch (e) {}
-                    }
-                  }
-                  return billsToShow.length === 0 ? (
-                    <li className="text-gray-400">No upcoming bills.</li>
-                  ) : (
-                    billsToShow.map((bill: any, i: number) => (
-                      <li key={i} className="flex justify-between items-center py-3">
-                        <div>
-                          <div className="font-semibold text-white">{bill.name}</div>
-                          <div className="text-xs text-gray-400">Due: {bill.dueDate.toLocaleDateString()}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-lg text-blue-300">{formatCurrency(bill.amount)}</div>
-                          <button className="mt-1 px-3 py-1 bg-green-600 text-white rounded">Pay</button>
-                        </div>
-                      </li>
-                    ))
-                  );
-                })()}
+                {billStates.map((bill, i) => (
+                  <li key={i} className="flex flex-col md:flex-row md:items-center justify-between py-6 gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-xl text-white mb-1">{bill.name}</div>
+                      <div className="text-sm text-gray-300 mb-2">Due: {bill.dueDate.toLocaleDateString()}</div>
+                      <div className="flex items-center gap-4">
+                        <label className="text-gray-300 text-sm font-medium flex items-center gap-2">
+                          Priority:
+                          <select
+                            className="bg-gray-700 text-white rounded px-2 py-1 ml-1 cursor-pointer"
+                            value={bill.priority}
+                            onChange={e => handlePriorityChange(i, e.target.value)}
+                          >
+                            <option>High</option>
+                            <option>Medium</option>
+                            <option>Low</option>
+                          </select>
+                        </label>
+                        <label className="flex items-center gap-2 text-gray-300 text-sm font-medium cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={bill.autoPay}
+                            onChange={() => handleAutoPayChange(i)}
+                            className="form-checkbox h-5 w-5 text-blue-500"
+                          />
+                          Auto-Pay
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end min-w-[120px]">
+                      <div className="font-bold text-2xl text-blue-300 mb-2">{`$${bill.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}</div>
+                      <button className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-lg shadow">Pay</button>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
