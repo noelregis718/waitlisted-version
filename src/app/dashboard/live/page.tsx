@@ -1010,6 +1010,28 @@ export default function LiveDashboardPage() {
     statsTotalSavings -
     statsTotalInvestments;
 
+  // Add after statsNetCashFlow and statsTotalIncome/Expenses/Savings/Investments are calculated
+  // Cash Flow Forecast & Runway Calculation
+  const forecastMonths = 6;
+  const recentNetFlows = statsCashFlowData.slice(-3).map(d => d.net);
+  const avgNetFlow = recentNetFlows.length > 0 ? recentNetFlows.reduce((a, b) => a + b, 0) / recentNetFlows.length : 0;
+  const currentBalance = typeof totalBalance !== 'undefined' ? totalBalance : 0;
+  let forecastedBalances = [currentBalance];
+  let runwayMonths = null;
+  for (let i = 1; i <= forecastMonths; i++) {
+    const nextBalance = forecastedBalances[i - 1] + avgNetFlow;
+    forecastedBalances.push(nextBalance);
+    if (runwayMonths === null && nextBalance <= 0) {
+      runwayMonths = i;
+    }
+  }
+  const runwayDays = runwayMonths !== null ? Math.round(runwayMonths * 30) : null;
+  const forecastLabels = Array.from({ length: forecastMonths + 1 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + i);
+    return date.toLocaleString('default', { month: 'short', year: '2-digit' });
+  });
+
   function handleReceiptFileChange(e: any) {
     if (!e.target) return;
     const files = Array.from(e.target.files || []);
@@ -1289,6 +1311,61 @@ export default function LiveDashboardPage() {
   const [savingsBuckets, setSavingsBuckets] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  // Add at the top of the component (after imports and before the component function)
+  const [manualPaidNotes, setManualPaidNotes] = useState<{ [billId: string]: string }>({});
+  const [showNoteInput, setShowNoteInput] = useState<{ [billId: string]: boolean }>({});
+  const [noteInputValue, setNoteInputValue] = useState<{ [billId: string]: string }>({});
+
+  // Add this handler inside LiveDashboardPage
+  async function handlePayBill(bill, idx) {
+    setStatusMessage('Processing payment...');
+    try {
+      const res = await fetch('/api/transactions/pay-bill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Send cookies/session for authentication
+        body: JSON.stringify({
+          billId: bill.name + '-' + bill.dueDate,
+          amount: bill.amount,
+          category: bill.category,
+          description: `Payment for ${bill.name}`,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatusMessage('Bill paid successfully!');
+        // Mark bill as paid in UI
+        setBillStates((prev) =>
+          prev.map((b, i) => (i === idx ? { ...b, status: 'paid' } : b))
+        );
+        // Log green 200 signal to terminal
+        console.log('%c200 request paid bills', 'color: green; font-weight: bold;');
+      } else {
+        setStatusMessage(data.message || 'Payment failed.');
+        console.error('Payment failed:', data.message);
+      }
+    } catch (err) {
+      setStatusMessage('Payment failed.');
+      console.error('Payment error:', err);
+    }
+  }
+
+  // Helper to calculate months between two dates
+  function monthsBetween(start, end) {
+    return (
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth()) +
+      (end.getDate() >= start.getDate() ? 0 : -1)
+    );
+  }
+
+  // On component mount, load manualPaidNotes from localStorage if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const notes = localStorage.getItem('manualPaidNotes');
+      if (notes) setManualPaidNotes(JSON.parse(notes));
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white pt-24 flex flex-row">
@@ -1989,6 +2066,41 @@ export default function LiveDashboardPage() {
             {/* Timeline Horizon for Last Month */}
             {/* Timeline Horizon for Last 30 Days */}
             {/* ...rest of statistics page... */}
+            {/* Cash Flow Forecast & Runway */}
+            <div className="bg-blue-900/80 rounded-xl p-6 text-white flex flex-col items-center shadow mb-8">
+              <h3 className="text-xl font-bold mb-4">Cash Flow Forecast</h3>
+              <div className="w-full flex justify-center">
+                <div className="flex-1 flex items-end gap-2" style={{ maxWidth: '100%', minWidth: 0 }}>
+                  {forecastedBalances.map((bal, i) => {
+                    const max = Math.max(...forecastedBalances);
+                    const height = max ? (bal / max) * 160 : 0;
+                    return (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center"
+                        style={{ flex: 1, minWidth: 0 }}
+                      >
+                        <div
+                          className="bg-blue-400/60 rounded-t border-dotted border-2 border-blue-300 w-full"
+                          style={{ height: `${height}px`, minWidth: '12px' }}
+                          title={`Forecasted Balance: ${formatCurrency(bal)}`}
+                        ></div>
+                        <span className="text-xs text-gray-200 mt-1 whitespace-nowrap overflow-hidden text-ellipsis w-full text-center">
+                          {forecastLabels[i]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mt-6 text-lg font-semibold text-blue-200 text-center w-full">
+                {avgNetFlow < 0 && runwayDays
+                  ? `At your current pace, your cash will last about ${runwayDays} days (${runwayMonths} months).`
+                  : avgNetFlow >= 0
+                  ? `At your current pace, your cash is projected to grow by ${formatCurrency(avgNetFlow)} per month.`
+                  : "Not enough data to forecast runway."}
+              </div>
+            </div>
           </div>
         )}
         {activeSection === "accounts" && (
@@ -2144,15 +2256,13 @@ export default function LiveDashboardPage() {
                       <div className="text-sm text-gray-300 mb-2">
                         Due: {bill.dueDate.toLocaleDateString()}
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 mb-2">
                         <label className="text-gray-300 text-sm font-medium flex items-center gap-2">
                           Priority:
                           <select
                             className="bg-gray-700 text-white rounded px-2 py-1 ml-1 cursor-pointer"
                             value={bill.priority}
-                            onChange={(e) =>
-                              handlePriorityChange(i, e.target.value)
-                            }
+                            onChange={(e) => handlePriorityChange(i, e.target.value)}
                           >
                             <option>High</option>
                             <option>Medium</option>
@@ -2169,12 +2279,66 @@ export default function LiveDashboardPage() {
                           Auto-Pay
                         </label>
                       </div>
+                      {bill.status === 'paid' && manualPaidNotes[bill.name + bill.dueDate] && (
+                        <div className="text-xs text-green-400 mt-1">Note: {manualPaidNotes[bill.name + bill.dueDate]}</div>
+                      )}
                     </div>
-                    <div className="flex flex-col items-end min-w-[120px]">
+                    <div className="flex flex-col items-end min-w-[120px] gap-2">
                       <div className="font-bold text-2xl text-blue-300 mb-2">{`$${bill.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
-                      <button className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-lg shadow">
-                        Pay
+                      <button
+                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-lg shadow"
+                        disabled={bill.status === 'paid'}
+                        onClick={() => handlePayBill(bill, i)}
+                      >
+                        {bill.status === 'paid' ? 'Paid' : 'Pay'}
                       </button>
+                      {bill.status !== 'paid' ? (
+                        <>
+                          <button
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-xs mt-1"
+                            onClick={() => setShowNoteInput({ ...showNoteInput, [bill.name + bill.dueDate]: true })}
+                          >
+                            Mark as Paid
+                          </button>
+                          {showNoteInput[bill.name + bill.dueDate] && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <input
+                                type="text"
+                                className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+                                placeholder="Enter note/source (e.g., cash, Venmo)"
+                                value={noteInputValue[bill.name + bill.dueDate] || ''}
+                                onChange={e => setNoteInputValue({ ...noteInputValue, [bill.name + bill.dueDate]: e.target.value })}
+                              />
+                              <button
+                                className="bg-green-700 hover:bg-green-800 text-white px-2 py-1 rounded text-xs"
+                                onClick={() => {
+                                  // Mark as paid in UI
+                                  const updatedBills = billStates.map((b, idx) =>
+                                    idx === i ? { ...b, status: 'paid' } : b
+                                  );
+                                  setBillStates(updatedBills);
+                                  // Save note
+                                  setManualPaidNotes({ ...manualPaidNotes, [bill.name + bill.dueDate]: noteInputValue[bill.name + bill.dueDate] || '' });
+                                  setShowNoteInput({ ...showNoteInput, [bill.name + bill.dueDate]: false });
+                                  // Persist to localStorage if needed
+                                  if (typeof window !== 'undefined') {
+                                    localStorage.setItem('bills', JSON.stringify(updatedBills));
+                                    localStorage.setItem('manualPaidNotes', JSON.stringify({ ...manualPaidNotes, [bill.name + bill.dueDate]: noteInputValue[bill.name + bill.dueDate] || '' }));
+                                  }
+                                }}
+                              >
+                                Save
+                              </button>
+                              <button
+                                className="bg-gray-700 hover:bg-gray-800 text-white px-2 py-1 rounded text-xs"
+                                onClick={() => setShowNoteInput({ ...showNoteInput, [bill.name + bill.dueDate]: false })}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : null}
                     </div>
                   </li>
                 ))}
@@ -2459,59 +2623,64 @@ export default function LiveDashboardPage() {
                     No goals yet. Create your first goal!
                   </li>
                 ) : (
-                  goals.map((goal, i) => (
-                    <li key={goal.id} className="flex flex-col gap-2 py-3">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-semibold text-white">
-                            {goal.name}
+                  goals.map((goal, i) => {
+                    const now = new Date();
+                    const target = Number(goal.target) || 0;
+                    const balance = Number(goal.balance) || 0;
+                    const remaining = Math.max(target - balance, 0);
+                    let deadline = goal.deadline ? new Date(goal.deadline) : null;
+                    let monthsToGoal = deadline ? monthsBetween(now, deadline) : 6;
+                    if (monthsToGoal < 1) monthsToGoal = 1;
+                    const perMonth = monthsToGoal > 0 ? remaining / monthsToGoal : remaining;
+                    const deadlineStr = deadline ? deadline.toLocaleDateString() : `in ${monthsToGoal} months`;
+                    return (
+                      <li key={goal.id} className="flex flex-col gap-2 py-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="font-semibold text-white">{goal.name}</div>
+                            <div className="text-xs text-gray-400">
+                              Target: {goal.target ? `$${goal.target}` : "N/A"}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Balance: {goal.balance ? `$${goal.balance}` : "$0"}
+                            </div>
+                            <div className="text-xs text-green-400">
+                              Remaining: {goal.target && goal.balance !== undefined ? `$${remaining}` : "N/A"}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-400">
-                            Target: {goal.target ? `$${goal.target}` : "N/A"}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            Balance: {goal.balance ? `$${goal.balance}` : "$0"}
-                          </div>
-                          <div className="text-xs text-green-400">
-                            Remaining:{" "}
-                            {goal.target && goal.balance !== undefined
-                              ? `$${Math.max(goal.target - goal.balance, 0)}`
-                              : "N/A"}
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="px-3 py-1 bg-green-600 text-white rounded"
+                              onClick={() => handleAddMoney(goal.id)}
+                            >
+                              Add
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="px-3 py-1 bg-green-600 text-white rounded"
-                            onClick={() => handleAddMoney(goal.id)}
-                          >
-                            Add
-                          </button>
+                        {/* Auto-savings allocation message */}
+                        <div className="text-xs text-blue-300 font-semibold mt-1">
+                          {remaining > 0
+                            ? `$${perMonth.toFixed(2)} will be auto-transferred to '${goal.name}' each month to reach your $${target} goal by ${deadlineStr}.`
+                            : `Goal reached! No further auto-savings needed.`}
                         </div>
-                      </div>
-                      <div className="mt-2">
-                        <div className="text-xs text-blue-300 font-semibold mb-1">
-                          Transactions
+                        <div className="mt-2">
+                          <div className="text-xs text-blue-300 font-semibold mb-1">Transactions</div>
+                          {goal.transactions && goal.transactions.length > 0 ? (
+                            <ul className="text-xs text-gray-200">
+                              {goal.transactions.map((tx, idx) => (
+                                <li key={idx} className="flex justify-between">
+                                  <span>{tx.description}</span>
+                                  <span>{tx.amount > 0 ? "+" : ""}{tx.amount}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="text-xs text-gray-500">No transactions yet.</div>
+                          )}
                         </div>
-                        {goal.transactions && goal.transactions.length > 0 ? (
-                          <ul className="text-xs text-gray-200">
-                            {goal.transactions.map((tx, idx) => (
-                              <li key={idx} className="flex justify-between">
-                                <span>{tx.description}</span>
-                                <span>
-                                  {tx.amount > 0 ? "+" : ""}
-                                  {tx.amount}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="text-xs text-gray-500">
-                            No transactions yet.
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  ))
+                      </li>
+                    );
+                  })
                 )}
               </ul>
               {statusMessage && (
