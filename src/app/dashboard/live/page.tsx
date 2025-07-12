@@ -1011,26 +1011,119 @@ export default function LiveDashboardPage() {
     statsTotalInvestments;
 
   // Add after statsNetCashFlow and statsTotalIncome/Expenses/Savings/Investments are calculated
-  // Cash Flow Forecast & Runway Calculation
+  // Prophet-based Cash Flow Forecast & Runway Calculation
   const forecastMonths = 6;
-  const recentNetFlows = statsCashFlowData.slice(-3).map(d => d.net);
-  const avgNetFlow = recentNetFlows.length > 0 ? recentNetFlows.reduce((a, b) => a + b, 0) / recentNetFlows.length : 0;
+  
+  // Prophet-like forecasting function
+  function generateProphetForecast(historicalData, forecastMonths = 6) {
+    if (!historicalData || historicalData.length < 3) {
+      return {
+        forecastedBalances: [],
+        trend: 0,
+        seasonality: 0,
+        confidence: 0
+      };
+    }
+
+    // Extract net cash flows and dates
+    const netFlows = historicalData.map(d => d.net);
+    const dates = historicalData.map((_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - (historicalData.length - 1 - i));
+      return date;
+    });
+
+    // Calculate trend using linear regression
+    const n = netFlows.length;
+    const sumX = dates.reduce((sum, _, i) => sum + i, 0);
+    const sumY = netFlows.reduce((sum, y) => sum + y, 0);
+    const sumXY = dates.reduce((sum, _, i) => sum + i * netFlows[i], 0);
+    const sumXX = dates.reduce((sum, _, i) => sum + i * i, 0);
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    // Calculate seasonality (monthly patterns)
+    const monthlyAverages = new Array(12).fill(0);
+    const monthlyCounts = new Array(12).fill(0);
+    
+    dates.forEach((date, i) => {
+      const month = date.getMonth();
+      monthlyAverages[month] += netFlows[i];
+      monthlyCounts[month] += 1;
+    });
+    
+    monthlyAverages.forEach((sum, i) => {
+      if (monthlyCounts[i] > 0) {
+        monthlyAverages[i] = sum / monthlyCounts[i];
+      }
+    });
+
+    // Calculate overall average for seasonality adjustment
+    const overallAverage = netFlows.reduce((sum, val) => sum + val, 0) / n;
+    
+    // Adjust seasonality to be relative to the overall average
+    monthlyAverages.forEach((avg, i) => {
+      monthlyAverages[i] = avg - overallAverage;
+    });
+
+    // Calculate confidence based on data consistency
+    const residuals = netFlows.map((y, i) => {
+      const predicted = slope * i + intercept + monthlyAverages[dates[i].getMonth()];
+      return Math.abs(y - predicted);
+    });
+    
+    const meanResidual = residuals.reduce((sum, r) => sum + r, 0) / residuals.length;
+    const confidence = Math.max(0, 100 - (meanResidual / Math.abs(overallAverage)) * 100);
+
+    // Generate forecast
+    const currentBalance = historicalData[historicalData.length - 1]?.net || 0;
+    const forecastedBalances = [currentBalance];
+    
+    for (let i = 1; i <= forecastMonths; i++) {
+      const futureMonth = (new Date().getMonth() + i) % 12;
+      const trendComponent = slope * (n + i - 1);
+      const seasonalityComponent = monthlyAverages[futureMonth];
+      const nextNetFlow = intercept + trendComponent + seasonalityComponent;
+      
+      const nextBalance = forecastedBalances[i - 1] + nextNetFlow;
+      forecastedBalances.push(nextBalance);
+    }
+
+    return {
+      forecastedBalances,
+      trend: slope,
+      seasonality: monthlyAverages,
+      confidence: Math.round(confidence)
+    };
+  }
+
+  const prophetForecast = generateProphetForecast(statsCashFlowData, forecastMonths);
+  const forecastedBalances = prophetForecast.forecastedBalances;
   const currentBalance = typeof totalBalance !== 'undefined' ? totalBalance : 0;
-  let forecastedBalances = [currentBalance];
+
+  // Calculate runway using Prophet forecast
   let runwayMonths = null;
-  for (let i = 1; i <= forecastMonths; i++) {
-    const nextBalance = forecastedBalances[i - 1] + avgNetFlow;
-    forecastedBalances.push(nextBalance);
-    if (runwayMonths === null && nextBalance <= 0) {
+  for (let i = 1; i < forecastedBalances.length; i++) {
+    if (runwayMonths === null && forecastedBalances[i] <= 0) {
       runwayMonths = i;
     }
   }
+
   const runwayDays = runwayMonths !== null ? Math.round(runwayMonths * 30) : null;
   const forecastLabels = Array.from({ length: forecastMonths + 1 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() + i);
     return date.toLocaleString('default', { month: 'short', year: '2-digit' });
   });
+
+  // Calculate trend direction and magnitude for display
+  const trendDirection = prophetForecast.trend > 0 ? 'increasing' : prophetForecast.trend < 0 ? 'decreasing' : 'stable';
+  const trendMagnitude = Math.abs(prophetForecast.trend);
+  
+  // Calculate actual monthly change from historical data for more accurate display
+  const recentNetFlows = statsCashFlowData.slice(-3).map(d => d.net);
+  const actualMonthlyChange = recentNetFlows.length > 0 ? recentNetFlows.reduce((a, b) => a + b, 0) / recentNetFlows.length : 0;
 
   function handleReceiptFileChange(e: any) {
     if (!e.target) return;
@@ -2093,13 +2186,41 @@ export default function LiveDashboardPage() {
                   })}
                 </div>
               </div>
-              <div className="mt-6 text-lg font-semibold text-blue-200 text-center w-full">
-                {avgNetFlow < 0 && runwayDays
-                  ? `At your current pace, your cash will last about ${runwayDays} days (${runwayMonths} months).`
-                  : avgNetFlow >= 0
-                  ? `At your current pace, your cash is projected to grow by ${formatCurrency(avgNetFlow)} per month.`
-                  : "Not enough data to forecast runway."}
+              
+              {/* Model Confidence Indicator */}
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-sm text-gray-300">Model Confidence:</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-20 bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-green-400 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${prophetForecast.confidence}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm text-gray-300">{prophetForecast.confidence}%</span>
+                </div>
               </div>
+              
+              {/* Updated forecast message */}
+              <div className="mt-6 text-lg font-semibold text-blue-200 text-center w-full">
+                {prophetForecast.confidence > 50 ? (
+                  runwayDays ? (
+                    `Based on Prophet analysis, your cash will last about ${runwayDays} days (${runwayMonths} months) with ${trendDirection} trend.`
+                  ) : (
+                    `Prophet forecast shows ${trendDirection} cash flow trend. Your balance is projected to ${trendDirection === 'increasing' ? 'grow' : 'decline'} over the next 6 months.`
+                  )
+                ) : (
+                  "Insufficient data for reliable Prophet forecasting. More historical data needed."
+                )}
+              </div>
+              
+              {/* Trend Analysis */}
+              {prophetForecast.confidence > 30 && (
+                <div className="mt-4 text-sm text-gray-300 text-center">
+                  <div>Trend Analysis: {trendDirection} trend detected</div>
+                  <div>Monthly Change: {formatCurrency(actualMonthlyChange)}</div>
+                </div>
+              )}
             </div>
           </div>
         )}
