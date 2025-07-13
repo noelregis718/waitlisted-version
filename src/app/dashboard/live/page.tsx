@@ -1413,26 +1413,43 @@ export default function LiveDashboardPage() {
   async function handlePayBill(bill, idx) {
     setStatusMessage('Processing payment...');
     try {
+      // Find a default accountId if available
+      const accountId = accounts && accounts.length > 0 ? accounts[0].account_id : undefined;
+      // Get user email from localStorage for custom auth
+      let userEmail = null;
+      if (typeof window !== 'undefined') {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            userEmail = JSON.parse(userData).email;
+          } catch {}
+        }
+      }
+      // Always send a valid category
+      const category = bill.category || bill.name;
       const res = await fetch('/api/transactions/pay-bill', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Send cookies/session for authentication
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userEmail ? { 'x-user-email': userEmail } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({
           billId: bill.name + '-' + bill.dueDate,
           amount: bill.amount,
-          category: bill.category,
+          category,
           description: `Payment for ${bill.name}`,
+          accountId,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         setStatusMessage('Bill paid successfully!');
-        // Mark bill as paid in UI
-        setBillStates((prev) =>
-          prev.map((b, i) => (i === idx ? { ...b, status: 'paid' } : b))
-        );
+        setBillStates((prev) => prev.map((b, i) => (i === idx ? { ...b, status: 'paid' } : b)));
         // Log green 200 signal to terminal
         console.log('%c200 request paid bills', 'color: green; font-weight: bold;');
+        // Fetch transactions to show reversible timer/undo
+        fetchTransactionsForReversible();
       } else {
         setStatusMessage(data.message || 'Payment failed.');
         console.error('Payment failed:', data.message);
@@ -1440,6 +1457,29 @@ export default function LiveDashboardPage() {
     } catch (err) {
       setStatusMessage('Payment failed.');
       console.error('Payment error:', err);
+    }
+  }
+
+  // Fetch transactions and update state for reversible logic
+  const [reversibleTxns, setReversibleTxns] = useState([]);
+  async function fetchTransactionsForReversible() {
+    let userEmail = null;
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          userEmail = JSON.parse(userData).email;
+        } catch {}
+      }
+    }
+    const response = await fetch('/api/transactions', {
+      headers: {
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      setReversibleTxns(data.filter(txn => txn.isReversible && !txn.reversed && txn.reversibleUntil && new Date(txn.reversibleUntil) > new Date()));
     }
   }
 
@@ -1455,9 +1495,17 @@ export default function LiveDashboardPage() {
   // On component mount, load manualPaidNotes from localStorage if present
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const notes = localStorage.getItem('manualPaidNotes');
-      if (notes) setManualPaidNotes(JSON.parse(notes));
+      // Always clear manualPaidNotes on mount to prevent old notes from being reused
+      localStorage.removeItem('manualPaidNotes');
+      setManualPaidNotes({});
     }
+  }, []);
+
+  useEffect(() => {
+    fetchTransactionsForReversible();
+    // Poll every 30 seconds to update timer
+    const interval = setInterval(fetchTransactionsForReversible, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -2400,7 +2448,7 @@ export default function LiveDashboardPage() {
                           Auto-Pay
                         </label>
                       </div>
-                      {bill.status === 'paid' && manualPaidNotes[bill.name + bill.dueDate] && (
+                      {bill.status === 'paid' && manualPaidNotes[bill.name + bill.dueDate] && manualPaidNotes[bill.name + bill.dueDate].trim() !== '' && (
                         <div className="text-xs text-green-400 mt-1">Note: {manualPaidNotes[bill.name + bill.dueDate]}</div>
                       )}
                     </div>
@@ -2438,14 +2486,23 @@ export default function LiveDashboardPage() {
                                     idx === i ? { ...b, status: 'paid' } : b
                                   );
                                   setBillStates(updatedBills);
-                                  // Save note
-                                  setManualPaidNotes({ ...manualPaidNotes, [bill.name + bill.dueDate]: noteInputValue[bill.name + bill.dueDate] || '' });
-                                  setShowNoteInput({ ...showNoteInput, [bill.name + bill.dueDate]: false });
-                                  // Persist to localStorage if needed
-                                  if (typeof window !== 'undefined') {
-                                    localStorage.setItem('bills', JSON.stringify(updatedBills));
-                                    localStorage.setItem('manualPaidNotes', JSON.stringify({ ...manualPaidNotes, [bill.name + bill.dueDate]: noteInputValue[bill.name + bill.dueDate] || '' }));
+                                  // Only save note if non-empty
+                                  const note = (noteInputValue[bill.name + bill.dueDate] || '').trim();
+                                  if (note) {
+                                    setManualPaidNotes({ ...manualPaidNotes, [bill.name + bill.dueDate]: note });
+                                    if (typeof window !== 'undefined') {
+                                      localStorage.setItem('manualPaidNotes', JSON.stringify({ ...manualPaidNotes, [bill.name + bill.dueDate]: note }));
+                                    }
+                                  } else {
+                                    // Remove any existing note if empty
+                                    const newNotes = { ...manualPaidNotes };
+                                    delete newNotes[bill.name + bill.dueDate];
+                                    setManualPaidNotes(newNotes);
+                                    if (typeof window !== 'undefined') {
+                                      localStorage.setItem('manualPaidNotes', JSON.stringify(newNotes));
+                                    }
                                   }
+                                  setShowNoteInput({ ...showNoteInput, [bill.name + bill.dueDate]: false });
                                 }}
                               >
                                 Save
@@ -2465,6 +2522,68 @@ export default function LiveDashboardPage() {
                 ))}
               </ul>
             </div>
+            {reversibleTxns.length > 0 && (
+              <div className="mt-8 bg-yellow-900/30 rounded-xl p-6">
+                <div className="mb-2 text-yellow-200 text-sm font-semibold">
+                  You can undo any payment here within 3 hours of paying a bill.
+                </div>
+                <h3 className="text-xl font-bold text-yellow-300 mb-4">Reversible Payments</h3>
+                <ul className="divide-y divide-yellow-700">
+                  {reversibleTxns.map(txn => {
+                    const diff = new Date(txn.reversibleUntil).getTime() - Date.now();
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const timeLeft = `${hours}h ${mins}m left to reverse`;
+                    return (
+                      <li key={txn.id} className="py-3 flex items-center justify-between">
+                        <div>
+                          <div className="font-semibold text-white">{txn.description || txn.category}</div>
+                          <div className="text-sm text-yellow-200">{timeLeft}</div>
+                        </div>
+                        <button
+                          className="btn btn-warning btn-sm"
+                          onClick={async () => {
+                            let userEmail = null;
+                            if (typeof window !== 'undefined') {
+                              const userData = localStorage.getItem('user');
+                              if (userData) {
+                                try {
+                                  userEmail = JSON.parse(userData).email;
+                                } catch {}
+                              }
+                            }
+                            await fetch('/api/transactions/reverse-bill', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                ...(userEmail ? { 'x-user-email': userEmail } : {}),
+                              },
+                              body: JSON.stringify({ id: txn.id }),
+                            });
+                            // Remove the reversed txn from the UI immediately
+                            setReversibleTxns(prev => prev.filter(t => t.id !== txn.id));
+                            fetchTransactionsForReversible();
+                            // Update billStates to set status back to 'pending' if a matching bill exists
+                            setBillStates(prev => prev.map(bill => {
+                              const desc = txn.description || '';
+                              if (
+                                (desc.includes(bill.name) || desc === bill.name) &&
+                                bill.status === 'paid'
+                              ) {
+                                return { ...bill, status: 'pending' };
+                              }
+                              return bill;
+                            }));
+                          }}
+                        >
+                          Undo
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
         )}
         {activeSection === "settings" && (

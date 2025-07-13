@@ -68,6 +68,11 @@ model Transaction {
   status        String    @default("PENDING") // PENDING, COMPLETED, FAILED, CANCELLED
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  // Reversible logic fields
+  isReversible  Boolean   @default(false)
+  reversibleUntil DateTime?
+  reversed      Boolean   @default(false)
+  reversedAt    DateTime?
 }
 
 model IncomeSource {
