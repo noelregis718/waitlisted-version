@@ -24,10 +24,23 @@ const AIChatBox: React.FC<AIChatBoxProps> = ({ monthlyIncome, monthlyExpenses, e
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [lastAIMsgIdx, setLastAIMsgIdx] = useState<number | null>(null);
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    // Find the last AI message index
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'ai') {
+        setLastAIMsgIdx(i);
+        setFeedbackGiven(false); // Reset feedback for new AI message
+        break;
+      }
+    }
   }, [messages]);
 
   const handleSend = async () => {
@@ -94,6 +107,29 @@ const AIChatBox: React.FC<AIChatBoxProps> = ({ monthlyIncome, monthlyExpenses, e
               }`}
             >
               {msg.content}
+              {/* Feedback prompt for the most recent AI message */}
+              {msg.role === 'ai' && idx === lastAIMsgIdx && !feedbackGiven && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-blue-200">
+                  <span>Was this helpful?</span>
+                  <button
+                    className="hover:text-green-400 focus:outline-none"
+                    onClick={() => setFeedbackGiven(true)}
+                    aria-label="Thumbs up"
+                  >
+                    👍
+                  </button>
+                  <button
+                    className="hover:text-red-400 focus:outline-none"
+                    onClick={() => setFeedbackGiven(true)}
+                    aria-label="Thumbs down"
+                  >
+                    👎
+                  </button>
+                </div>
+              )}
+              {msg.role === 'ai' && idx === lastAIMsgIdx && feedbackGiven && (
+                <div className="mt-2 text-xs text-blue-300">Thank you for your feedback!</div>
+              )}
             </div>
           </div>
         ))}
