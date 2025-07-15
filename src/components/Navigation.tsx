@@ -1,12 +1,10 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { useState } from 'react'
 import styles from './Navigation.module.css'
 
-export default function Navigation() {
-  const { user, signOut } = useAuth()
+export default function Navigation({ setShowWaitlistModal }: { setShowWaitlistModal: (open: boolean) => void }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -34,31 +32,12 @@ export default function Navigation() {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <>
-                <Link href="/dashboard" className={styles.navLink}>
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => signOut()}
-                  className={styles.navLink}
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className={styles.navLink}>
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  className={styles.signUpButton}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
+            <button
+              className={styles.signUpButton}
+              onClick={() => setShowWaitlistModal(true)}
+            >
+              Join Waitlist
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -94,34 +73,19 @@ export default function Navigation() {
               <Link href="/employers" className={styles.mobileMenuItem}>
                 For Employers
               </Link>
-              {user ? (
-                <>
-                  <Link href="/dashboard" className={styles.mobileMenuItem}>
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    className={styles.mobileMenuItem}
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link href="/login" className={styles.mobileMenuItem}>
-                    Login
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className={styles.signUpButton + " block w-full text-center mt-2"}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
+              <button
+                className={styles.signUpButton + " block w-full text-center mt-2"}
+                onClick={() => {
+                  setShowWaitlistModal(true)
+                  setIsMenuOpen(false)
+                }}
+              >
+                Join Waitlist
+              </button>
             </div>
           </div>
         )}
+        {/* Waitlist Modal placeholder (to be implemented in layout) */}
       </div>
     </nav>
   )

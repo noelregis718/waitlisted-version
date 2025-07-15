@@ -1,82 +1,34 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
+import Link from "next/link";
 
 export default function TermsPage() {
-  const termsSections = [
-    {
-      title: "Account Terms",
-      content: "By opening an account with AnkFin, you agree to maintain accurate information, protect your account credentials, and comply with all applicable banking regulations. We reserve the right to close accounts that violate our terms."
-    },
-    {
-      title: "Service Usage",
-      content: "Our banking services are provided 'as is' and are subject to availability. We strive to maintain 24/7 service availability but may occasionally need to perform maintenance or updates to improve our services."
-    },
-    {
-      title: "Customer Responsibilities",
-      content: "Customers are responsible for maintaining the security of their accounts, reporting unauthorized transactions promptly, and ensuring sufficient funds for transactions. We provide tools and alerts to help you manage your account effectively."
-    },
-    {
-      title: "Bank's Responsibilities",
-      content: "AnkFin is committed to providing secure, reliable banking services. We maintain FDIC insurance, implement robust security measures, and provide 24/7 customer support to address your concerns."
-    }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white py-20">
-      {/* Header Section */}
-      <div className="container mx-auto px-4 text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-          Terms of Service
-        </h1>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-          Understanding our commitment to providing you with the best banking experience while maintaining clear terms and conditions.
-        </p>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {termsSections.map((section, index) => (
-            <motion.div
-              key={section.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-8 rounded-xl mb-8"
-            >
-              <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                {section.title}
-              </h2>
-              <p className="text-gray-300 text-lg">
-                {section.content}
-              </p>
-            </motion.div>
-          ))}
+    <div className="min-h-screen w-full bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white flex flex-col justify-center items-center">
+      <section className="w-full py-24 bg-gradient-to-r from-blue-900 via-black to-purple-900 shadow-lg">
+        <div className="container mx-auto px-4 flex flex-col items-center">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-center drop-shadow-lg">Terms of Service</h1>
+          <p className="text-xl text-gray-200 max-w-2xl text-center mb-8 font-medium">
+            Please read these Terms of Service carefully before using AnkFin.
+          </p>
         </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="container mx-auto px-4 text-center mt-16">
-        <h2 className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-4">
-          Need Clarification?
-        </h2>
-        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          Our team is ready to help you understand our terms and conditions.
-        </p>
-        <div className="flex justify-center gap-4">
-          <a
-            href="mailto:ventureai2025@gmail.com?subject=FlowBank Terms of Service Inquiry&body=Hello,%0D%0A%0D%0AI have a question about FlowBank's terms of service:%0D%0A%0D%0ABest regards,"
-            className="btn btn-primary text-lg px-8 py-4"
-          >
-            Contact Us
-          </a>
-          <Link href="/privacy" className="btn btn-secondary text-lg px-8 py-4">
-            View Privacy Policy
-          </Link>
+      </section>
+      <section className="w-full py-16 flex-1 flex flex-col justify-center">
+        <div className="container mx-auto px-4 max-w-3xl flex flex-col items-center">
+          <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl shadow-xl p-10 border border-gray-700 flex flex-col text-left w-full">
+            <h2 className="text-2xl font-semibold mb-4 text-blue-300">1. Acceptance of Terms</h2>
+            <p className="text-gray-300 mb-6">By accessing or using AnkFin, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree, please do not use our services.</p>
+            <h2 className="text-2xl font-semibold mb-4 text-purple-300">2. Use of Service</h2>
+            <p className="text-gray-300 mb-6">You agree to use AnkFin only for lawful purposes and in accordance with these Terms. You are responsible for maintaining the confidentiality of your account and for all activities that occur under your account.</p>
+            <h2 className="text-2xl font-semibold mb-4 text-pink-300">3. Privacy</h2>
+            <p className="text-gray-300 mb-6">Your privacy is important to us. Please review our Privacy Policy to understand how we collect, use, and safeguard your information.</p>
+            <h2 className="text-2xl font-semibold mb-4 text-green-300">4. Limitation of Liability</h2>
+            <p className="text-gray-300 mb-6">AnkFin is provided "as is" and "as available" without warranties of any kind. We are not liable for any damages or losses resulting from your use of our services.</p>
+            <h2 className="text-2xl font-semibold mb-4 text-yellow-300">5. Contact</h2>
+            <p className="text-gray-300">If you have any questions about these Terms, please contact us at <a href="mailto:ventureai2025@gmail.com" className="text-blue-400 underline">ventureai2025@gmail.com</a>.</p>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
-  )
+  );
 } 

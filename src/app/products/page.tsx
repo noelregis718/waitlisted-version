@@ -54,294 +54,278 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white py-20">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-900 text-white flex flex-col">
       {/* Header Section */}
-      <div className="container mx-auto px-4 text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-          Financial Products & Tools
-        </h1>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-          Explore our suite of financial products and powerful calculators to help you make informed decisions.
-        </p>
-      </div>
-
+      <section className="py-24 bg-gradient-to-br from-blue-950 via-black to-purple-950 shadow-xl">
+        <div className="container mx-auto px-4 flex flex-col items-center">
+          <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Financial Products & Tools</h1>
+            <p className="text-2xl text-gray-200 mb-10 font-medium">Explore our suite of financial products and powerful calculators to help you make informed decisions.</p>
+          </div>
+        </div>
+      </section>
       {/* Tabs Navigation */}
-      <div className="container mx-auto px-4 mb-12">
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => setActiveTab('loan')}
-            className={`px-6 py-3 rounded-lg ${
-              activeTab === 'loan'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500'
-                : 'bg-gray-800 hover:bg-gray-700'
-            }`}
-          >
-            Loan Calculator
-          </button>
-          <button
-            onClick={() => setActiveTab('investment')}
-            className={`px-6 py-3 rounded-lg ${
-              activeTab === 'investment'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500'
-                : 'bg-gray-800 hover:bg-gray-700'
-            }`}
-          >
-            Investment Calculator
-          </button>
-          <button
-            onClick={() => setActiveTab('networth')}
-            className={`px-6 py-3 rounded-lg ${
-              activeTab === 'networth'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500'
-                : 'bg-gray-800 hover:bg-gray-700'
-            }`}
-          >
-            Net Worth Calculator
-          </button>
+      <section className="py-10">
+        <div className="container mx-auto px-4 mb-12 flex justify-center">
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              onClick={() => setActiveTab('loan')}
+              className={`px-8 py-4 rounded-xl text-lg font-semibold shadow-md transition-all duration-200 ${activeTab === 'loan' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}
+            >
+              Loan Calculator
+            </button>
+            <button
+              onClick={() => setActiveTab('investment')}
+              className={`px-8 py-4 rounded-xl text-lg font-semibold shadow-md transition-all duration-200 ${activeTab === 'investment' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}
+            >
+              Investment Calculator
+            </button>
+            <button
+              onClick={() => setActiveTab('networth')}
+              className={`px-8 py-4 rounded-xl text-lg font-semibold shadow-md transition-all duration-200 ${activeTab === 'networth' ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}
+            >
+              Net Worth Calculator
+            </button>
+          </div>
         </div>
-      </div>
-
+      </section>
       {/* Calculator Content */}
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Loan Calculator */}
-          {activeTab === 'loan' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8"
-            >
-              <h2 className="text-2xl font-bold mb-6">Loan Calculator</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Loan Amount ($)</label>
-                  <input
-                    type="number"
-                    value={loanAmount}
-                    onChange={(e) => setLoanAmount(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter loan amount"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Interest Rate (%)</label>
-                  <input
-                    type="number"
-                    value={interestRate}
-                    onChange={(e) => setInterestRate(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter interest rate"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Loan Term (Years)</label>
-                  <input
-                    type="number"
-                    value={loanTerm}
-                    onChange={(e) => setLoanTerm(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter loan term"
-                  />
-                </div>
-                <button
-                  onClick={calculateLoan}
-                  className="w-full btn btn-primary text-lg px-8 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                >
-                  Calculate
-                </button>
-                {monthlyPayment > 0 && (
-                  <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
-                    <h3 className="text-xl font-semibold mb-2">Monthly Payment</h3>
-                    <p className="text-3xl font-bold text-green-400">${monthlyPayment.toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Investment Calculator */}
-          {activeTab === 'investment' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8"
-            >
-              <h2 className="text-2xl font-bold mb-6">Investment Calculator</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Initial Investment ($)</label>
-                  <input
-                    type="number"
-                    value={investmentAmount}
-                    onChange={(e) => setInvestmentAmount(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter investment amount"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Expected Annual Return (%)</label>
-                  <input
-                    type="number"
-                    value={expectedReturn}
-                    onChange={(e) => setExpectedReturn(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter expected return"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Investment Period (Years)</label>
-                  <input
-                    type="number"
-                    value={investmentPeriod}
-                    onChange={(e) => setInvestmentPeriod(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter investment period"
-                  />
-                </div>
-                <button
-                  onClick={calculateInvestment}
-                  className="w-full btn btn-primary text-lg px-8 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                >
-                  Calculate
-                </button>
-                {futureValue > 0 && (
-                  <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
-                    <h3 className="text-xl font-semibold mb-2">Future Value</h3>
-                    <p className="text-3xl font-bold text-green-400">${futureValue.toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Net Worth Calculator */}
-          {activeTab === 'networth' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8"
-            >
-              <h2 className="text-2xl font-bold mb-6">Net Worth Calculator</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">Assets</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Cash & Savings</label>
-                      <input
-                        type="number"
-                        value={assets.cash}
-                        onChange={(e) => setAssets({ ...assets, cash: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Investments</label>
-                      <input
-                        type="number"
-                        value={assets.investments}
-                        onChange={(e) => setAssets({ ...assets, investments: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Property Value</label>
-                      <input
-                        type="number"
-                        value={assets.property}
-                        onChange={(e) => setAssets({ ...assets, property: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Vehicles</label>
-                      <input
-                        type="number"
-                        value={assets.vehicles}
-                        onChange={(e) => setAssets({ ...assets, vehicles: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Other Assets</label>
-                      <input
-                        type="number"
-                        value={assets.other}
-                        onChange={(e) => setAssets({ ...assets, other: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">Liabilities</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Mortgage</label>
-                      <input
-                        type="number"
-                        value={liabilities.mortgage}
-                        onChange={(e) => setLiabilities({ ...liabilities, mortgage: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Loans</label>
-                      <input
-                        type="number"
-                        value={liabilities.loans}
-                        onChange={(e) => setLiabilities({ ...liabilities, loans: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Credit Cards</label>
-                      <input
-                        type="number"
-                        value={liabilities.creditCards}
-                        onChange={(e) => setLiabilities({ ...liabilities, creditCards: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Other Liabilities</label>
-                      <input
-                        type="number"
-                        value={liabilities.other}
-                        onChange={(e) => setLiabilities({ ...liabilities, other: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={calculateNetWorth}
-                className="w-full mt-8 btn btn-primary text-lg px-8 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+      <section className="pb-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            {/* Loan Calculator */}
+            {activeTab === 'loan' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-blue-900/60 to-gray-900/80 rounded-2xl shadow-2xl border border-blue-700/30 p-10"
               >
-                Calculate Net Worth
-              </button>
-              {netWorth !== 0 && (
-                <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
-                  <h3 className="text-xl font-semibold mb-2">Your Net Worth</h3>
-                  <p className={`text-3xl font-bold ${netWorth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    ${netWorth.toFixed(2)}
-                  </p>
+                <h2 className="text-3xl font-bold mb-8 text-white">Loan Calculator</h2>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-lg font-semibold mb-2 text-blue-300">Loan Amount ($)</label>
+                    <input
+                      type="number"
+                      value={loanAmount}
+                      onChange={(e) => setLoanAmount(e.target.value)}
+                      className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                      placeholder="Enter loan amount"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-semibold mb-2 text-blue-300">Interest Rate (%)</label>
+                    <input
+                      type="number"
+                      value={interestRate}
+                      onChange={(e) => setInterestRate(e.target.value)}
+                      className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                      placeholder="Enter interest rate"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-semibold mb-2 text-blue-300">Loan Term (Years)</label>
+                    <input
+                      type="number"
+                      value={loanTerm}
+                      onChange={(e) => setLoanTerm(e.target.value)}
+                      className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                      placeholder="Enter loan term"
+                    />
+                  </div>
+                  <button
+                    onClick={calculateLoan}
+                    className="w-full btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 font-semibold shadow-lg mt-4"
+                  >
+                    Calculate
+                  </button>
+                  {monthlyPayment > 0 && (
+                    <div className="mt-8 p-6 bg-gray-700/70 rounded-xl shadow text-center">
+                      <h3 className="text-2xl font-semibold mb-2 text-green-400">Monthly Payment</h3>
+                      <p className="text-4xl font-bold text-green-300">${monthlyPayment.toFixed(2)}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+            {/* Investment Calculator */}
+            {activeTab === 'investment' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-purple-900/60 to-pink-900/80 rounded-2xl shadow-2xl border border-purple-700/30 p-10"
+              >
+                <h2 className="text-3xl font-bold mb-8 text-white">Investment Calculator</h2>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-lg font-semibold mb-2 text-purple-300">Initial Investment ($)</label>
+                    <input
+                      type="number"
+                      value={investmentAmount}
+                      onChange={(e) => setInvestmentAmount(e.target.value)}
+                      className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-400 text-lg shadow"
+                      placeholder="Enter investment amount"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-semibold mb-2 text-purple-300">Expected Annual Return (%)</label>
+                    <input
+                      type="number"
+                      value={expectedReturn}
+                      onChange={(e) => setExpectedReturn(e.target.value)}
+                      className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-400 text-lg shadow"
+                      placeholder="Enter expected return"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-semibold mb-2 text-purple-300">Investment Period (Years)</label>
+                    <input
+                      type="number"
+                      value={investmentPeriod}
+                      onChange={(e) => setInvestmentPeriod(e.target.value)}
+                      className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-400 text-lg shadow"
+                      placeholder="Enter investment period"
+                    />
+                  </div>
+                  <button
+                    onClick={calculateInvestment}
+                    className="w-full btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-semibold shadow-lg mt-4"
+                  >
+                    Calculate
+                  </button>
+                  {futureValue > 0 && (
+                    <div className="mt-8 p-6 bg-gray-700/70 rounded-xl shadow text-center">
+                      <h3 className="text-2xl font-semibold mb-2 text-green-400">Future Value</h3>
+                      <p className="text-4xl font-bold text-green-300">${futureValue.toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+            {/* Net Worth Calculator */}
+            {activeTab === 'networth' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-pink-900/60 to-blue-900/80 rounded-2xl shadow-2xl border border-pink-700/30 p-10"
+              >
+                <h2 className="text-3xl font-bold mb-8 text-white">Net Worth Calculator</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-6 text-pink-300">Assets</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-pink-300">Cash & Savings</label>
+                        <input
+                          type="number"
+                          value={assets.cash}
+                          onChange={(e) => setAssets({ ...assets, cash: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-pink-300">Investments</label>
+                        <input
+                          type="number"
+                          value={assets.investments}
+                          onChange={(e) => setAssets({ ...assets, investments: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-pink-300">Property Value</label>
+                        <input
+                          type="number"
+                          value={assets.property}
+                          onChange={(e) => setAssets({ ...assets, property: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-pink-300">Vehicles</label>
+                        <input
+                          type="number"
+                          value={assets.vehicles}
+                          onChange={(e) => setAssets({ ...assets, vehicles: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-pink-300">Other</label>
+                        <input
+                          type="number"
+                          value={assets.other}
+                          onChange={(e) => setAssets({ ...assets, other: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-6 text-blue-300">Liabilities</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-blue-300">Mortgage</label>
+                        <input
+                          type="number"
+                          value={liabilities.mortgage}
+                          onChange={(e) => setLiabilities({ ...liabilities, mortgage: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-blue-300">Loans</label>
+                        <input
+                          type="number"
+                          value={liabilities.loans}
+                          onChange={(e) => setLiabilities({ ...liabilities, loans: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-blue-300">Credit Cards</label>
+                        <input
+                          type="number"
+                          value={liabilities.creditCards}
+                          onChange={(e) => setLiabilities({ ...liabilities, creditCards: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-lg font-semibold mb-2 text-blue-300">Other</label>
+                        <input
+                          type="number"
+                          value={liabilities.other}
+                          onChange={(e) => setLiabilities({ ...liabilities, other: e.target.value })}
+                          className="w-full px-6 py-4 rounded-xl bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={calculateNetWorth}
+                  className="w-full btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-blue-500 hover:from-pink-600 hover:to-blue-600 font-semibold shadow-lg mt-4"
+                >
+                  Calculate
+                </button>
+                <div className="mt-8 p-6 bg-gray-700/70 rounded-xl shadow text-center">
+                  <h3 className="text-2xl font-semibold mb-2 text-green-400">Net Worth</h3>
+                  <p className="text-4xl font-bold text-green-300">${netWorth.toFixed(2)}</p>
+                </div>
+              </motion.div>
+            )}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Product Information Section */}
       <div className="container mx-auto px-4 mt-20">
@@ -448,12 +432,9 @@ export default function ProductsPage() {
           Join thousands of users who trust AnkFin for their financial needs.
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/signup" className="btn btn-primary text-lg px-8 py-3">
-            Create Account
-          </Link>
           <a
             href="mailto:ventureai2025@gmail.com?subject=AnkFin Products Inquiry&body=Hello,%0D%0A%0D%0AI'm interested in learning more about AnkFin's financial products.%0D%0A%0D%0ABest regards,"
-            className="btn btn-secondary text-lg px-8 py-3"
+            className="btn btn-secondary text-lg px-8 py-4 mt-8 shadow-lg mb-16"
           >
             Contact Sales
           </a>

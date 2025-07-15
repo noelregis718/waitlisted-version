@@ -1,114 +1,105 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 export default function Home() {
-  const { signUp } = useAuth()
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showNotify, setShowNotify] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Store email in localStorage for use in signup page
-    localStorage.setItem('userEmail', email)
-    // Redirect to signup page
-    router.push('/signup')
+    setShowNotify(true)
+    setEmail('')
+    setTimeout(() => setShowNotify(false), 4000)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-900 text-white flex flex-col">
       {/* Hero Section */}
-      <section className="relative py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-              Modern Banking for Modern Businesses
-            </h1>
-            <p className="text-xl text-gray-300 mb-8">
-              Experience the future of banking with AI-powered financial management, automated workflows, and intelligent insights.
-            </p>
-            
+      <section className="relative py-28 bg-gradient-to-br from-blue-950 via-black to-purple-950 shadow-xl">
+        <div className="container mx-auto px-4 flex flex-col items-center">
+          <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
+            <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Modern Banking for Modern Businesses</h1>
+            <p className="text-2xl text-gray-200 mb-10 font-medium">Experience the future of banking with AI-powered financial management, automated workflows, and intelligent insights.</p>
             {/* Email Input Section */}
-            <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  className="flex-1 px-6 py-3 rounded-lg bg-gray-800/50 border border-gray-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-gray-400"
-                />
-                <button
-                  type="submit"
-                  className="btn btn-primary text-lg px-8 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap"
-                >
-                  Get Started
-                </button>
-              </div>
+            <form onSubmit={handleSubmit} className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 mb-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                className="flex-1 px-6 py-4 rounded-xl bg-gray-800/70 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow-md"
+              />
+              <button
+                type="submit"
+                className="btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold"
+              >
+                Get Started
+              </button>
             </form>
+            {showNotify && (
+              <div className="mt-4 text-green-400 bg-gray-800/80 rounded-lg py-3 px-6 animate-fade-in text-lg font-medium shadow">
+                Thank you! We will notify you.
+              </div>
+            )}
           </div>
         </div>
       </section>
-
       {/* Features Section */}
-      <section className="py-24">
+      <section className="py-28">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="card bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 animate-slide-in-left">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="card bg-gradient-to-br from-blue-900/60 to-gray-900/80 rounded-2xl shadow-xl border border-blue-700/30 p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Smart Automation</h3>
-              <p className="text-gray-400">Automate your financial workflows and save time with intelligent banking solutions.</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Smart Automation</h3>
+              <p className="text-lg text-gray-300">Automate your financial workflows and save time with intelligent banking solutions.</p>
             </div>
-            <div className="card bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 animate-fade-in">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="card bg-gradient-to-br from-purple-900/60 to-pink-900/80 rounded-2xl shadow-xl border border-purple-700/30 p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Real-time Analytics</h3>
-              <p className="text-gray-400">Get detailed insights into your business finances with advanced analytics tools.</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Real-time Analytics</h3>
+              <p className="text-lg text-gray-300">Get detailed insights into your business finances with advanced analytics tools.</p>
             </div>
-            <div className="card bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 animate-slide-in-right">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="card bg-gradient-to-br from-pink-900/60 to-blue-900/80 rounded-2xl shadow-xl border border-pink-700/30 p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Secure Transactions</h3>
-              <p className="text-gray-400">Bank with confidence using our enterprise-grade security infrastructure.</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Secure Transactions</h3>
+              <p className="text-lg text-gray-300">Bank with confidence using our enterprise-grade security infrastructure.</p>
             </div>
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Ready to Transform Your Banking Experience?</h2>
           <div className="flex justify-center gap-4">
-            <Link href="/signup" className="btn btn-primary text-lg px-8 py-4">
-              Sign Up Now
-            </Link>
-            <Link href="/login" className="btn btn-secondary text-lg px-8 py-4">
-              Login
-            </Link>
+            <a
+              href="mailto:ventureai2025@gmail.com?subject=AnkFin Sales Inquiry&body=Hello,%0D%0A%0D%0AI am interested in learning more about AnkFin.%0D%0A%0D%0ABest regards,"
+              className="btn btn-secondary text-lg px-8 py-4 shadow-lg"
+            >
+              Contact Sales
+            </a>
           </div>
         </div>
       </section>
-
       {/* Footer */}
-      <footer className="bg-black text-gray-400 py-16 border-t border-gray-800">
+      <footer className="bg-black text-gray-400 py-16 border-t border-gray-800 mt-auto">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="card bg-transparent border-none shadow-none">
