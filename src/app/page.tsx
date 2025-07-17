@@ -23,8 +23,8 @@ export default function Home() {
       <section className="relative py-28 bg-gradient-to-br from-blue-950 via-black to-purple-950 shadow-xl">
         <div className="container mx-auto px-4 flex flex-col items-center">
           <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
-            <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Modern Banking for Modern Businesses</h1>
-            <p className="text-2xl text-gray-200 mb-10 font-medium">Experience the future of banking with AI-powered financial management, automated workflows, and intelligent insights.</p>
+            <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Ankfin: AI-powered finance in your pocket.</h1>
+            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your cash flow, investments, and decisions—no dashboards, no spreadsheets. Just clarity and control.</p>
             {/* Email Input Section */}
             <form onSubmit={handleSubmit} className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 mb-2">
               <input
