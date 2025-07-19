@@ -17,16 +17,35 @@ export default function WaitlistModal({ open, onClose }: { open: boolean, onClos
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.company || !form.usecase) {
       setError('Please fill in all fields.');
       return;
     }
     setError('');
-    setSuccess(true);
-    setForm({ name: '', email: '', company: '', usecase: '' });
-    // Removed auto-close logic to keep modal open until user clicks the cross button
+    setLoading(true);
+    try {
+      const res = await fetch('https://getform.io/f/agdlmppb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          company: form.company,
+          usecase: form.usecase,
+        }),
+      });
+      if (res.ok) {
+        setSuccess(true);
+        setForm({ name: '', email: '', company: '', usecase: '' });
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setLoading(false);
   };
 
   return (
