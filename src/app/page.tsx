@@ -24,7 +24,7 @@ export default function Home() {
         <div className="container mx-auto px-4 flex flex-col items-center">
           <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
             <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Ankfin: AI-powered finance in your pocket.</h1>
-            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your cash flow, investments, and decisions—no dashboards, no spreadsheets. Just clarity and control.</p>
+            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your cash flow, investments, and decisions- no dashboards, no spreadsheets. Just clarity and control.</p>
             {/* Email Input Section */}
             <form onSubmit={handleSubmit} className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 mb-2">
               <input
@@ -61,7 +61,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-2xl font-semibold mb-4 text-white">Smart Automation</h3>
-              <p className="text-lg text-gray-300">Automate your financial workflows and save time with intelligent banking solutions.</p>
+              <p className="text-lg text-gray-300">Automate your financial workflows and save time with intelligent Financial Operation System solutions.</p>
             </div>
             <div className="card bg-gradient-to-br from-purple-900/60 to-pink-900/80 rounded-2xl shadow-xl border border-purple-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
@@ -87,7 +87,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Ready to Transform Your Banking Experience?</h2>
+          <h2 className="text-4xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Ready to Transform Your Financial Operation System Experience?</h2>
           <div className="flex justify-center gap-4">
             <a
               href="mailto:ventureai2025@gmail.com?subject=AnkFin Sales Inquiry&body=Hello,%0D%0A%0D%0AI am interested in learning more about AnkFin.%0D%0A%0D%0ABest regards,"

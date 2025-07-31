@@ -65,7 +65,7 @@ export default function PricingPage() {
         'Custom onboarding',
         'White-label solutions',
       ],
-      cta: 'Contact Sales',
+      cta: 'Employers: Join Waitlist',
       popular: false,
     },
   ]
@@ -133,12 +133,12 @@ export default function PricingPage() {
                   ))}
                 </ul>
                 {tier.name === 'Enterprise' ? (
-                  <a
-                    href="mailto:ventureai2025@gmail.com?subject=FlowBank Enterprise Inquiry&body=Hello,%0D%0A%0D%0AI'm interested in the Enterprise plan for FlowBank.%0D%0A%0D%0ABest regards,"
+                  <button
                     className="block w-full text-center btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 font-semibold shadow-lg"
+                    onClick={() => setShowWaitlistModal(true)}
                   >
                     {tier.cta}
-                  </a>
+                  </button>
                 ) : (
                   <button
                     className="block w-full text-center btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 font-semibold shadow-lg"
