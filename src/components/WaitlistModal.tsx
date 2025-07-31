@@ -51,10 +51,18 @@ export default function WaitlistModal({ open, onClose }: { open: boolean, onClos
   return (
     <div ref={modalRef} onClick={handleBackdropClick} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-[#232946]/90 to-[#181F2A]/90 rounded-3xl shadow-2xl w-full max-w-sm p-6 relative max-h-[90vh] overflow-y-auto flex flex-col border border-white/10 backdrop-blur-xl" style={{boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'}}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-300 hover:text-white text-3xl bg-white/10 hover:bg-white/20 rounded-full p-2 shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
-          &times;
+        {/* Accessible Close Button */}
+        <button
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute top-7 right-4 flex items-center justify-center text-gray-400 hover:text-red-500 bg-transparent rounded-full w-8 h-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer z-10"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
-        <h2 className="text-3xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg text-center">Request Early Access</h2>
+        <h2 className="text-2xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg text-left">Request Early Access</h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-semibold mb-2 text-white text-left">Name</label>
