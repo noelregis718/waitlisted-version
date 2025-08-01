@@ -17,8 +17,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <title>AnkFin - Modern Banking Solutions</title>
-        <meta name="description" content="Experience seamless banking with smart automation and intelligent insights with AnkFin." />
+        <title>AnkFin - Modern Financial Operations System Solutions</title>
+        <meta name="description" content="Experience seamless Financial Operation System with smart automation and intelligent insights with AnkFin." />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white`}>
