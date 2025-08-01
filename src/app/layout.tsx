@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <title>AnkFin - Modern Financial Operations System Solutions</title>
+        <title>Financial Operating System</title>
         <meta name="description" content="Experience seamless Financial Operation System with smart automation and intelligent insights with AnkFin." />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
