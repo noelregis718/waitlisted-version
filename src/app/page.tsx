@@ -39,7 +39,7 @@ export default function Home() {
                 type="submit"
                 className="btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold"
               >
-                Get Started
+                Join Waitlist
               </button>
             </form>
             {showNotify && (
