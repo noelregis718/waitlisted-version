@@ -24,7 +24,7 @@ export default function Home() {
         <div className="container mx-auto px-4 flex flex-col items-center">
           <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
             <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Ankfin: AI-powered finance in your pocket.</h1>
-            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your cash flow, investments, and decisions- no dashboards, no spreadsheets. Just clarity and control.</p>
+            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your cash flow, investments, and decisions, no dashboards, no spreadsheets. Just clarity and control.</p>
             {/* Email Input Section */}
             <form onSubmit={handleSubmit} className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 mb-2">
               <input
@@ -62,7 +62,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-2xl font-semibold mb-4 text-white">Financial Operating System</h3>
-              <p className="text-lg text-gray-300">Full AI-based money management system that forecasts, guides, and automates decisions - your CFO-in-your-pocket.</p>
+              <p className="text-lg text-gray-300">Full AI-based money management system that forecasts, guides, and automates decisions, your CFO in your pocket.</p>
             </div>
             <div className="card bg-gradient-to-br from-purple-900/60 to-pink-900/80 rounded-2xl shadow-xl border border-purple-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
@@ -89,7 +89,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-2xl font-semibold mb-4 text-white">Non Custodial Wallet Infrastructure</h3>
-              <p className="text-lg text-gray-300">Create secure, user-controlled wallets with GDPR and CCPA compliance. No user funds ever held by us.</p>
+              <p className="text-lg text-gray-300">Create secure, user controlled wallets with GDPR and CCPA compliance. No user funds ever held by us.</p>
             </div>
             <div className="card bg-gradient-to-br from-yellow-900/60 to-red-900/80 rounded-2xl shadow-xl border border-yellow-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
@@ -98,7 +98,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-2xl font-semibold mb-4 text-white">Behavioral Nudges</h3>
-              <p className="text-lg text-gray-300">Personalized, AI-timed nudges that promote healthy financial behavior change.</p>
+              <p className="text-lg text-gray-300">Personalized, AI timed nudges that promote healthy financial behavior change.</p>
             </div>
             <div className="card bg-gradient-to-br from-indigo-900/60 to-purple-900/80 rounded-2xl shadow-xl border border-indigo-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
