@@ -107,7 +107,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-2xl font-semibold mb-4 text-white">AI Conversational Chat LLM Interface</h3>
-              <p className="text-lg text-gray-300">AI-powered assistant handles questions, executes tasks, and surfaces insights.</p>
+              <p className="text-lg text-gray-300">AI chat powered by LLM's and NLP that handles questions, executes tasks, and surfaces insights.</p>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Ready to Transform Your Financial Operation System Experience?</h2>
+          <h2 className="text-4xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Ready to Transform Your Embedded Financial Product Marketplace?</h2>
           <div className="flex justify-center gap-4">
             <a
               href="mailto:ventureai2025@gmail.com?subject=AnkFin Sales Inquiry&body=Hello,%0D%0A%0D%0AI am interested in learning more about AnkFin.%0D%0A%0D%0ABest regards,"
