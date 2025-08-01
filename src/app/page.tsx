@@ -53,33 +53,61 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-28">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <h2 className="text-4xl font-bold mb-12 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Core Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="card bg-gradient-to-br from-blue-900/60 to-gray-900/80 rounded-2xl shadow-xl border border-blue-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold mb-4 text-white">Smart Automation</h3>
-              <p className="text-lg text-gray-300">Automate your financial workflows and save time with intelligent Financial Operation System solutions.</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Financial Operating System</h3>
+              <p className="text-lg text-gray-300">Full AI-based money management system that forecasts, guides, and automates decisions - your CFO-in-your-pocket.</p>
             </div>
             <div className="card bg-gradient-to-br from-purple-900/60 to-pink-900/80 rounded-2xl shadow-xl border border-purple-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold mb-4 text-white">Real-time Analytics</h3>
-              <p className="text-lg text-gray-300">Get detailed insights into your business finances with advanced analytics tools.</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Split Engine</h3>
+              <p className="text-lg text-gray-300">Auto-routes paychecks to bills, taxes, savings, etc. in real time, no need to input information manually.</p>
             </div>
             <div className="card bg-gradient-to-br from-pink-900/60 to-blue-900/80 rounded-2xl shadow-xl border border-pink-700/30 p-8 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Embedded Financial Marketplace</h3>
+              <p className="text-lg text-gray-300">Personalized product recommendations based on real cash flow (CDs, savings, cards, etc.).</p>
+            </div>
+            <div className="card bg-gradient-to-br from-green-900/60 to-blue-900/80 rounded-2xl shadow-xl border border-green-700/30 p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold mb-4 text-white">Secure Transactions</h3>
-              <p className="text-lg text-gray-300">Bank with confidence using our enterprise-grade security infrastructure.</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Non Custodial Wallet Infrastructure</h3>
+              <p className="text-lg text-gray-300">Create secure, user-controlled wallets with GDPR and CCPA compliance. No user funds ever held by us.</p>
+            </div>
+            <div className="card bg-gradient-to-br from-yellow-900/60 to-red-900/80 rounded-2xl shadow-xl border border-yellow-700/30 p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Behavioral Nudges</h3>
+              <p className="text-lg text-gray-300">Personalized, AI-timed nudges that promote healthy financial behavior change.</p>
+            </div>
+            <div className="card bg-gradient-to-br from-indigo-900/60 to-purple-900/80 rounded-2xl shadow-xl border border-indigo-700/30 p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">AI Conversational Chat LLM Interface</h3>
+              <p className="text-lg text-gray-300">AI-powered assistant handles questions, executes tasks, and surfaces insights.</p>
             </div>
           </div>
         </div>
@@ -133,4 +161,4 @@ export default function Home() {
       </footer>
     </div>
   )
-} 
+}
