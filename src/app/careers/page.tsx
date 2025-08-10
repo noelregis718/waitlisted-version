@@ -9,7 +9,7 @@ export default function CareersPage() {
         <div className="container mx-auto px-4 flex flex-col items-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 text-center drop-shadow-lg">Careers at AnkFin</h1>
           <p className="text-xl text-gray-200 max-w-2xl text-center mb-8 font-medium">
-            Join us in building the future of digital banking. We’re always looking for passionate, talented people to help us innovate and grow.
+            Join us in building the future of digital Financial Operation System. We’re always looking for passionate, talented people to help us innovate and grow.
           </p>
         </div>
       </section>

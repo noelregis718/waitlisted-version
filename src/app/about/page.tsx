@@ -9,7 +9,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 flex flex-col items-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-center drop-shadow-lg">About AnkFin</h1>
           <p className="text-xl text-gray-200 max-w-2xl text-center mb-8 font-medium">
-            Revolutionizing modern banking for businesses and individuals with seamless, AI-powered financial management, automated workflows, and intelligent insights.
+            Revolutionizing modern Financial Operation System for businesses and individuals with seamless, AI-powered financial management, automated workflows, and intelligent insights.
           </p>
         </div>
       </section>
@@ -21,7 +21,7 @@ export default function AboutPage() {
           </div>
           <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl shadow-xl p-8 flex flex-col items-center text-center border border-gray-700">
             <h2 className="text-3xl font-semibold mb-3 text-purple-300">Our Vision</h2>
-            <p className="text-lg text-gray-300">To be the most trusted and innovative digital banking platform for the next generation of businesses and individuals.</p>
+            <p className="text-lg text-gray-300">To be the most trusted and innovative digital Financial Operation System platform for the next generation of businesses and individuals.</p>
           </div>
         </div>
       </section>
@@ -54,7 +54,7 @@ export default function AboutPage() {
           <div className="bg-gradient-to-br from-blue-900/60 to-purple-900/60 rounded-2xl shadow-xl p-8 border border-gray-700 flex flex-col items-center text-center">
             <h3 className="text-2xl font-bold mb-2 text-blue-300">Ven-Kerry Prince</h3>
             <p className="text-lg text-gray-200">
-              Ven-Kerry Prince brings deep expertise in banking, marketing, management, operations, and financial frontline experience. As Head of Strategy & Execution, Ven-Kerry leads AnkFin with a vision for innovation and excellence in financial services.
+              Ven-Kerry Prince brings deep expertise in Financial Operation System, marketing, management, operations, and financial frontline experience. As Head of Strategy & Execution, Ven-Kerry leads AnkFin with a vision for innovation and excellence in financial services.
             </p>
           </div>
         </div>

@@ -382,7 +382,7 @@ export default function ProductsPage() {
               </div>
               <h3 className="text-xl font-semibold mb-4 text-center">Smart Automation</h3>
               <p className="text-gray-400 text-center">
-                Automate your financial workflows and save time with our intelligent banking solutions.
+                Automate your financial workflows and save time with our intelligent Financial Operation System solutions.
               </p>
             </motion.div>
 

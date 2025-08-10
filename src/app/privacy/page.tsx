@@ -7,19 +7,19 @@ export default function PrivacyPage() {
   const privacySections = [
     {
       title: "Data Protection",
-      content: "AnkFin adheres to strict data protection standards in compliance with US banking regulations. We implement industry-leading encryption and security measures to protect your personal and financial information."
+      content: "AnkFin adheres to strict data protection standards in compliance with US Financial Operation System regulations. We implement industry-leading encryption and security measures to protect your personal and financial information."
     },
     {
       title: "Information Collection",
-      content: "We collect only the information necessary to provide our banking services, including personal identification, financial information, and transaction data. All data collection follows US banking regulations and consumer protection laws."
+      content: "We collect only the information necessary to provide our Financial Operation System services, including personal identification, financial information, and transaction data. All data collection follows US Financial Operation System regulations and consumer protection laws."
     },
     {
       title: "Data Usage",
-      content: "Your information is used solely for providing banking services, processing transactions, and maintaining regulatory compliance. We never sell your personal data to third parties."
+      content: "Your information is used solely for providing Financial Operation System services, processing transactions, and maintaining regulatory compliance. We never sell your personal data to third parties."
     },
     {
       title: "Regulatory Compliance",
-      content: "AnkFin operates in full compliance with US banking regulations, including the Bank Secrecy Act (BSA), Anti-Money Laundering (AML) laws, and the Gramm-Leach-Bliley Act (GLBA)."
+      content: "AnkFin operates in full compliance with US Financial Operation System regulations, including the Bank Secrecy Act (BSA), Anti-Money Laundering (AML) laws, and the Gramm-Leach-Bliley Act (GLBA)."
     }
   ]
 
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-2xl text-gray-300 max-w-2xl mx-auto font-medium">
-          Your privacy and security are our top priorities. Learn how we protect your information and comply with US banking regulations.
+          Your privacy and security are our top priorities. Learn how we protect your information and comply with US Financial Operation System regulations.
         </p>
       </div>
 

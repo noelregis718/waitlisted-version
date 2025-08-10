@@ -14,7 +14,7 @@ export default function EmployersPage() {
         <div className="container mx-auto px-4 flex flex-col items-center">
           <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
             <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Smart Money Management for Freelancers</h1>
-            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your finances, track your income, and grow your business with our intelligent banking platform.</p>
+            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your finances, track your income, and grow your business with our intelligent Financial Operation System platform.</p>
             <div className="flex justify-center gap-6 mt-8">
               <button
                 className="btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold"

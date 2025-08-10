@@ -1,20 +1,41 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 export default function Home() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [showNotify, setShowNotify] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setShowNotify(true)
-    setEmail('')
-    setTimeout(() => setShowNotify(false), 4000)
+    if (!name || !email) {
+      setError('Please enter your name and email.')
+      return
+    }
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('https://getform.io/f/agdlmppb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, source: 'landing_hero' }),
+      })
+      if (res.ok) {
+        setShowNotify(true)
+        setName('')
+        setEmail('')
+        setTimeout(() => setShowNotify(false), 4000)
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
+    } catch (err) {
+      setError('Network error. Please try again.')
+    }
+    setLoading(false)
   }
 
   return (
@@ -22,28 +43,50 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative py-28 bg-gradient-to-br from-blue-950 via-black to-purple-950 shadow-xl">
         <div className="container mx-auto px-4 flex flex-col items-center">
-          <div className="max-w-4xl mx-auto text-center rounded-3xl shadow-2xl bg-gray-900/70 p-12 border border-gray-800">
-            <h1 className="text-6xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">Ankfin: AI-powered finance in your pocket.</h1>
-            <p className="text-2xl text-gray-200 mb-10 font-medium">Automate your cash flow, investments, and decisions, no dashboards, no spreadsheets. Just clarity and control.</p>
-            {/* Email Input Section */}
-            <form onSubmit={handleSubmit} className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 mb-2">
+          <div className="w-full max-w-5xl mx-auto rounded-3xl shadow-2xl bg-gray-900/80 p-12 border border-gray-700/50 backdrop-blur-sm">
+            <div className="text-center">
+              <h1 className="text-5xl md:text-7xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-lg">
+                Ankfin: AI-powered finance in your pocket.
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
+                Automate your cash flow, investments, and decisions, no dashboards, no spreadsheets. Just clarity and control.
+              </p>
+            </div>
+            {/* Name + Email Input Section */}
+            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-4">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                required
+                disabled={loading}
+                className="flex-1 px-6 py-4 rounded-xl bg-gray-800/70 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow-md"
+              />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
+                disabled={loading}
                 className="flex-1 px-6 py-4 rounded-xl bg-gray-800/70 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 text-lg shadow-md"
               />
               <button
                 type="submit"
-                className="btn btn-primary text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold"
+                disabled={loading}
+                className="text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold disabled:opacity-60"
               >
-                Join Waitlist
+                {loading ? 'Submitting…' : 'Join Waitlist'}
               </button>
             </form>
+            {error && (
+              <div className="mt-4 text-red-400 bg-gray-800/80 rounded-lg py-3 px-6 text-base text-center">
+                {error}
+              </div>
+            )}
             {showNotify && (
-              <div className="mt-4 text-green-400 bg-gray-800/80 rounded-lg py-3 px-6 animate-fade-in text-lg font-medium shadow">
+              <div className="mt-6 text-green-400 bg-gray-800/80 rounded-lg py-3 px-6 animate-fade-in text-lg font-medium shadow text-center">
                 Thank you! We will notify you.
               </div>
             )}
