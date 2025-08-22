@@ -19,7 +19,7 @@ export default function RootLayout({
       <head>
         <title>AnkFin - Financial Operating System</title>
         <meta name="description" content="Experience seamless Financial Operation System with smart automation and intelligent insights with AnkFin." />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white`}>
         <Navigation setShowWaitlistModal={setShowWaitlistModal} />

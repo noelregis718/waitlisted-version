@@ -53,7 +53,7 @@ export default function Home() {
               </p>
             </div>
             {/* Name + Email Input Section */}
-            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-4">
+            <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto flex flex-col sm:flex-row gap-4 justify-center">
               <input
                 type="text"
                 value={name}
@@ -75,7 +75,7 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={loading}
-                className="text-lg px-10 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold disabled:opacity-60"
+                className="text-lg px-12 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 whitespace-nowrap shadow-lg font-semibold disabled:opacity-60"
               >
                 {loading ? 'Submitting…' : 'Join Waitlist'}
               </button>
